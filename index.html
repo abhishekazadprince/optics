@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Story of Optics — Geometry, Light, and Scale</title>
     
-    <!-- MathJax for rendering equations -->
     <script>
     window.MathJax = {
       tex: {
@@ -20,6 +19,10 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Roboto+Mono:wght@400;500&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --primary: #1a237e; /* Navy */
@@ -29,7 +32,14 @@
             --text: #263238;    /* Dark Blue Grey */
             --code-bg: #263238;
             --panel-bg: #eceff1;
+            --shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Merriweather', 'Georgia', serif;
@@ -38,144 +48,213 @@
             margin: 0;
             padding: 0;
             line-height: 1.8;
+            /* Removed grid pattern for smoother mobile scroll */
+            overflow-x: hidden; 
+            width: 100%;
         }
 
-        h1, h2, h3, h4 {
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            color: var(--primary);
-            margin-top: 1.8em;
-            font-weight: 700;
+        /* --- Navigation --- */
+        .toc-sidebar {
+            position: fixed; left: 0; top: 0; height: 100vh; width: 260px;
+            background: #fff; border-right: 1px solid #e0e0e0; padding: 40px 20px;
+            overflow-y: auto; transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 2000; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
         }
+        .toc-sidebar.active { transform: translateX(0); }
+        
+        .toc-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3); z-index: 1999; 
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .toc-sidebar.active + .toc-overlay { opacity: 1; pointer-events: auto; }
 
-        p.narrative {
-            font-size: 1.15rem;
-            color: #37474f;
-            margin-bottom: 1.5em;
-            max-width: 800px;
+        .toc-toggle {
+            position: fixed; left: 20px; top: 20px; 
+            background: white; color: var(--primary);
+            border: 1px solid #ddd; border-radius: 50%; width: 45px; height: 45px; cursor: pointer;
+            z-index: 1001; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex;
+            align-items: center; justify-content: center; font-size: 20px; 
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .toc-toggle:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        .toc-sidebar h3 { font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--secondary); margin-top: 20px; margin-bottom: 20px;}
+        .toc-sidebar ul { list-style: none; padding: 0; }
+        .toc-sidebar li { margin-bottom: 10px; }
+        .toc-sidebar a { text-decoration: none; color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; display: block; padding: 5px 0; }
+        .toc-sidebar a:hover { color: var(--accent); }
+
+        /* --- Typography (MATCHING INDEX FILE) --- */
+        h1, h2, h3, h4 { 
+            font-family: 'Segoe UI', 'Roboto', sans-serif; /* Switched to Sans-Serif for cleaner mobile look */
+            color: var(--primary); 
+            margin-top: 1.5em; 
+            font-weight: 700; 
+            line-height: 1.3;
+        }
+        h1 { margin-top: 0; }
+        h2 { border-bottom: 2px solid var(--accent); padding-bottom: 10px; display: inline-block; margin-bottom: 20px; }
+        
+        p.narrative { font-size: 1.1rem; color: #37474f; margin-bottom: 1.5em; max-width: 800px; }
 
         .highlight-box {
-            background-color: #e3f2fd;
-            border-left: 5px solid var(--primary);
-            padding: 20px 30px;
-            margin: 30px 0;
-            font-family: 'Segoe UI', sans-serif;
-            font-style: italic;
-            color: #0d47a1;
+            background-color: #e3f2fd; border-left: 5px solid var(--primary);
+            padding: 20px 25px; margin: 30px 0; font-family: 'Segoe UI', sans-serif;
+            font-style: italic; color: #0d47a1; border-radius: 0 8px 8px 0;
         }
 
         .advanced-read {
-            border-left: 4px solid #ff6f00;
-            background: #fff8e1;
-            padding: 25px;
-            margin: 25px 0;
-            font-size: 1.05rem;
-            border-radius: 0 4px 4px 0;
+            border-left: 4px solid #ff6f00; background: #fff8e1; padding: 25px;
+            margin: 25px 0; font-size: 1.05rem; border-radius: 0 4px 4px 0; position: relative;
+        }
+        .advanced-read::before {
+            content: "DEEP DIVE"; position: absolute; top: -10px; left: 20px;
+            background: #ff6f00; color: white; font-size: 0.7rem; padding: 2px 8px;
+            font-family: 'Segoe UI', sans-serif; font-weight: bold; border-radius: 4px;
         }
 
+        /* --- Hero --- */
         .hero {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-            color: white;
-            padding: 100px 20px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            margin-bottom: 50px;
+            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); color: white;
+            padding: 80px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-bottom: 40px; position: relative; overflow: hidden; width: 100%;
         }
+        .hero h1 { color: white; margin: 0; font-size: 2.8rem; letter-spacing: -0.5px; }
+        .hero p { font-size: 1.2rem; opacity: 0.95; font-style: italic; margin-top: 15px; font-family: 'Merriweather', serif; font-weight: 300; max-width: 700px; margin-left: auto; margin-right: auto; }
 
-        .hero h1 { color: white; margin: 0; font-size: 3rem; letter-spacing: -1px; }
-        .hero p { font-size: 1.3rem; opacity: 0.9; font-style: italic; margin-top: 15px; font-family: 'Segoe UI', sans-serif;}
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; width: 100%; }
 
         section {
-            background: white;
-            padding: 50px;
-            margin-bottom: 50px;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-top: 4px solid var(--primary);
+            background: white; padding: 40px; margin-bottom: 40px; border-radius: 8px;
+            box-shadow: var(--shadow); border-top: 4px solid var(--primary);
         }
 
+        /* --- Lab & Canvas --- */
         .lab-wrapper {
-            border: 1px solid #cfd8dc;
-            background: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 40px 0;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border: 1px solid #cfd8dc; background: #fff; border-radius: 8px;
+            overflow: hidden; margin: 40px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         canvas {
-            display: block;
-            width: 100%;
-            height: 420px;
-            cursor: crosshair;
+            display: block; width: 100%; height: 400px; cursor: crosshair;
             background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f5f5f5 100%);
+            touch-action: none; /* Prevents scroll when touching canvas */
         }
 
         #pinhole-canvas { background: linear-gradient(90deg, #f5f5f5 50%, #263238 50%); }
         #obscura-canvas { background: linear-gradient(90deg, #f1f8e9 50%, #263238 50%); }
+        #prism-canvas { background: #263238; } 
+        #wave-canvas { background: #1a1a1a; }
+        #focus-canvas { background: #fdfdfd; height: 320px; }
+        #horse-canvas { background: #fff; height: 400px; }
+        #aperture-canvas { background: #212121; height: 320px; }
+        #zoom-canvas { background: #fff; height: 300px; }
 
+        /* --- Controls --- */
         .controls-bar {
-            background: var(--panel-bg);
-            padding: 25px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            border-top: 1px solid #b0bec5;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 0.95rem;
+            background: var(--panel-bg); padding: 20px; display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px;
+            border-top: 1px solid #b0bec5; font-family: 'Segoe UI', sans-serif; font-size: 0.95rem;
         }
 
         .slider-group { display: flex; flex-direction: column; }
         .slider-group label { 
             display: flex; justify-content: space-between; 
-            font-weight: 600; color: var(--secondary); margin-bottom: 8px; 
+            font-weight: 600; color: var(--secondary); margin-bottom: 10px; font-size: 0.85rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
         }
         
-        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); }
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+            background: var(--primary); cursor: pointer; margin-top: -10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 2px solid white;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #cfd8dc; border-radius: 2px;
+        }
 
         .btn-toggle {
-            background: white;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            padding: 8px 16px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            margin-right: 10px;
-            margin-bottom: 10px;
+            background: white; border: 2px solid var(--primary); color: var(--primary);
+            padding: 8px 14px; border-radius: 25px; cursor: pointer; font-weight: 600;
+            transition: all 0.2s; margin-right: 8px; margin-bottom: 8px;
+            font-size: 0.8rem; letter-spacing: 0.5px;
         }
         .btn-toggle:hover { background: #e8eaf6; }
         .btn-toggle.active { background: var(--primary); color: white; }
 
         .stats-panel {
-            font-family: 'Courier New', monospace;
-            background: var(--code-bg);
-            color: #b2dfdb;
-            padding: 20px;
-            font-size: 0.9rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            border-top: 1px solid #37474f;
+            font-family: 'Roboto Mono', monospace; background: var(--code-bg); color: #b2dfdb;
+            padding: 15px 20px; font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr;
+            border-top: 1px solid #37474f; align-items: center;
         }
 
-        #graph-canvas { height: 280px; background: #fff; border-top: 1px solid #eee; }
+        #graph-canvas { height: 250px; background: #fff; border-top: 1px solid #eee; }
+        
+        .textbook-section {
+            background: #fafafa; border-left: 4px solid #546e7a; padding: 25px; margin: 30px 0;
+            border-radius: 4px;
+        }
+        .textbook-section h3 { margin-top: 0; color: #37474f; border-bottom: none; font-size: 1.2rem;}
 
+        /* --- MOBILE OPTIMIZATION --- */
         @media (max-width: 768px) {
+            body { background-size: auto; /* disable grid pattern effect */ }
+            .hero { padding: 60px 20px; }
             .hero h1 { font-size: 2.2rem; }
-            section { padding: 25px; }
-            canvas { height: 300px; }
-            .stats-panel { grid-template-columns: 1fr; }
+            
+            .container { padding: 15px; }
+            section { padding: 20px; margin-bottom: 25px; } /* Less padding for more content */
+            
+            h2 { font-size: 1.5rem; }
+            p.narrative { font-size: 1rem; }
+            
+            /* Canvas height adjustment for mobile */
+            canvas { height: 300px !important; }
+            
+            .controls-bar { padding: 15px; gap: 15px; }
+            .stats-panel { grid-template-columns: 1fr; gap: 5px; text-align: left !important; }
+            .stats-panel div { text-align: left !important; }
+            
+            .toc-sidebar { width: 85%; }
         }
     </style>
 </head>
 <body>
+
+<button class="toc-toggle" onclick="toggleTOC()">☰</button>
+
+<div class="toc-overlay" onclick="toggleTOC()"></div>
+
+<nav class="toc-sidebar" id="toc">
+    <div style="text-align: right; margin-bottom:10px;">
+        <button onclick="toggleTOC()" style="border:none; background:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+    </div>
+    <h3>The Story of Optics</h3>
+    <ul>
+        <li><a href="#intro" onclick="toggleTOC()">Introduction</a></li>
+        <li><a href="#chap1" onclick="toggleTOC()">1. The Pinhole</a></li>
+        <li><a href="#chap2" onclick="toggleTOC()">2. Camera Obscura</a></li>
+        <li><a href="#chap3" onclick="toggleTOC()">3. Reflection</a></li>
+        <li><a href="#chap4" onclick="toggleTOC()">4. Linearity</a></li>
+        <li><a href="#interlude" onclick="toggleTOC()" style="color: var(--accent); font-weight:600;">Interlude: The Prism</a></li>
+        <li><a href="#chap5" onclick="toggleTOC()">5. The Lens</a></li>
+        <ul style="padding-left:15px; font-size:0.9em; border-left:2px solid #eee;">
+            <li><a href="#sec-focus" onclick="toggleTOC()">5.1 Focusing</a></li>
+            <li><a href="#sec-fov" onclick="toggleTOC()">5.2 Angle of View</a></li>
+            <li><a href="#sec-aperture" onclick="toggleTOC()">5.3 f-Number</a></li>
+            <li><a href="#sec-zoom" onclick="toggleTOC()">5.4 Zoom Lenses</a></li>
+        </ul>
+        <li><a href="#chap6" onclick="toggleTOC()">6. The Eye</a></li>
+        <li><a href="#chap7" onclick="toggleTOC()">7. The Telescope</a></li>
+        <li><a href="#chap8" onclick="toggleTOC()" style="color: var(--accent); font-weight:600;">8. Wave Optics</a></li>
+        <li><a href="#summary" onclick="toggleTOC()">Summary</a></li>
+    </ul>
+</nav>
 
 <div class="hero">
     <h1>The Story of Optics</h1>
@@ -184,8 +263,7 @@
 
 <div class="container">
 
-    <!-- INTRO -->
-    <section>
+    <section id="intro">
         <h2>From Shape to Light</h2>
         <p class="narrative">
             Every measurement in physics is made by comparing two things. A length is measured by comparing it with a ruler; a time is measured by comparing a motion with a clock. But there is something even more primitive than length and time: <strong>shape</strong>.
@@ -201,8 +279,7 @@
         </p>
     </section>
 
-    <!-- CHAPTER 1: PINHOLE (ABSTRACT) -->
-    <section>
+    <section id="chap1">
         <h2>Chapter 1: The Pinhole (Pure Geometry)</h2>
         <p class="narrative">
             Before we look at the complex world of lenses, let us look at the simplest optical instrument: the Pinhole.
@@ -235,8 +312,7 @@
         </p>
     </section>
 
-    <!-- CHAPTER 2: CAMERA OBSCURA (REALISTIC RAY MODEL) -->
-    <section>
+    <section id="chap2">
         <h2>Chapter 2: The Camera Obscura</h2>
         <div class="advanced-read">
             <h3>Apertures & The World Upside Down</h3>
@@ -278,8 +354,7 @@
         </div>
     </section>
 
-    <!-- CHAPTER 3: REFLECTION -->
-    <section>
+    <section id="chap3">
         <h2>Chapter 3: Reflection & The Geometric Proof</h2>
         <p class="narrative">
             Pinholes are dim. To gather more light, we use mirrors. But even with curved surfaces, the geometry of similar triangles remains the law of the land.
@@ -295,17 +370,17 @@
                 <div class="slider-group">
                     <label>Focal Length ($f$): <span id="m-f-val"></span></label>
                     <input type="range" id="m-f-input" min="-150" max="-40" value="-80">
-                    <small>Negative = Concave</small>
+                    <small style="color:#666; font-size: 0.75rem;">Negative = Concave</small>
                 </div>
                 
-                <div style="display: flex; flex-wrap: wrap;">
+                <div style="display: flex; flex-wrap: wrap; margin-top: 10px;">
                     <button class="btn-toggle" id="btn-tri-pole" onclick="mirrorLab.toggleTriangles('pole')">Show Pole $\triangle$</button>
                     <button class="btn-toggle" id="btn-tri-center" onclick="mirrorLab.toggleTriangles('center')">Show Center $\triangle$</button>
                 </div>
             </div>
             <div class="stats-panel">
                 <div id="m-calc-res"></div>
-                <div id="m-calc-props"></div>
+                <div id="m-calc-props" style="text-align: right;"></div>
             </div>
         </div>
         
@@ -317,8 +392,7 @@
         </div>
     </section>
 
-    <!-- CHAPTER 4: LINEARITY -->
-    <section>
+    <section id="chap4">
         <h2>Chapter 4: The Linearity of Light</h2>
         <p class="narrative">
             The algebra is nothing more than bookkeeping of how scale factors combine. If we plot the "Optical Power" of the image ($1/v$) against the object ($1/u$), we find a straight line.
@@ -328,52 +402,43 @@
         </div>
     </section>
 
-    <!-- CHAPTER 5: THE REAL CAMERA (RESTORED TEXT) -->
-    <section>
-        <h2>Chapter 5: The Real Camera (Lens)</h2>
+    <section id="interlude">
+        <h2>Interlude: The Hidden Colors</h2>
+        <p class="narrative">
+            Before we discuss lenses, we must understand <strong>Refraction</strong>. When light enters a denser medium (like glass), it slows down and bends. This is Snell's Law.
+        </p>
+        <p class="narrative">
+            But there is a secret hidden within white light. Different colors travel at slightly different speeds in glass. Blue light slows down more than Red light, so it bends more. This separation of colors is called <strong>Dispersion</strong>.
+        </p>
+        
+        <div class="lab-wrapper">
+            <canvas id="prism-canvas"></canvas>
+            <div class="controls-bar">
+                <div class="slider-group">
+                    <label>Incident Angle: <span id="prism-angle-val"></span>°</label>
+                    <input type="range" id="prism-angle-input" min="0" max="60" value="30">
+                </div>
+                <div class="slider-group">
+                    <label>Refractive Index ($n$): <span id="prism-n-val"></span></label>
+                    <input type="range" id="prism-n-input" min="1.3" max="1.8" step="0.01" value="1.5">
+                    <small style="color:#666; font-size: 0.75rem;">Glass Density</small>
+                </div>
+            </div>
+            <div class="stats-panel">
+                <div id="prism-stat-1">Spectrum: Visible</div>
+                <div id="prism-stat-2" style="text-align: right;">Newton's Experiment</div>
+            </div>
+        </div>
+        <p class="narrative">
+             A lens is simply a set of prisms arranged in a circle. It bends light to a point. But because of dispersion, simple lenses focus blue light closer than red light (Chromatic Aberration).
+        </p>
+    </section>
+
+    <section id="chap5">
+        <h2>Chapter 5: The Lens</h2>
         <p class="narrative">
             We have seen the Pinhole (geometry) and the Simple Lens (focus). Now, let us look deeper into the physics of the camera itself.
         </p>
-
-        <div class="advanced-read">
-            <h3>The Mechanics of Capture</h3>
-            <p>
-                The camera is a box with a lens in one side of it and a photographic film or a CCD on the opposite side. The distance between camera lens and film can be changed so as to focus on objects at various distances. The <strong>aperture</strong> can also be changed.
-            </p>
-            <p>
-                In dim light you need to open the aperture up to let a lot of light in; but this makes the image less sharp, and you have a smaller depth of field. The aperture of a lens is merely its diameter, and it is usually expressed as a fraction of the focal length. Thus an aperture of $f/22$ is a small aperture. You can use this only in strong light, but you will then have nice sharp images and a large depth of field. An aperture of $f/6.3$ is wide open; the cone of light inside the camera is quite steep, and focussing is then quite critical. You use such a wide aperture only if you are forced to by dim light.
-            </p>
-            <p>
-                The apertures typically available on a camera are often in steps with a ratio of approximately $\sqrt{2}$ from one to the next. As you increase the aperture by a factor of $\sqrt{2}$, you get twice as much light on the film (because this depends on the area of the exposed lens), so presumably you can cut the exposure time by one half.
-            </p>
-
-            <h3>Depth of Focus: A Triangle Problem</h3>
-            <p>
-                How is the depth of focus related to the aperture? Let us suppose that we have a lens that is free of aberrations such as spherical aberration, and that a point object produces a point image in the focal plane. If your film or CCD is not exactly in the plane, it will be illuminated not by a point image but by a small circle of finite diameter. If this circle is smaller than the grain or pixel size, you may wish to regard it as not seriously out of focus.
-            </p>
-            <p>
-                So the question is: How far can you move the film away from the focal plane in either direction without the image being seriously out of focus? This range is the <strong>depth of focus</strong>.
-            </p>
-            <p>
-                Imagine a cone of light converging from a lens of radius $R$ to a focal point at distance $q$. Let us suppose that we place a film or CCD at a distance $x$ from the focal point, and that we are prepared to tolerate an out-of-focus “image” of radius $r$. From similar triangles we see that $x/r = q/R$. Or, if $D$ is the diameter of the lens, and $d$ is the diameter of the tolerable out-of-focus circle, $x/d = q/D$. Thus we can place the film at a distance:
-                $$ x = q \frac{d}{D} $$
-                on either side of the true focal plane without appreciable degradation of the image. For example, if the aperture is $f/6.3$ (meaning $q/D \approx 6.3$), and you are prepared to tolerate an out-of-focus diameter $d = 0.1 \text{ mm}$, the depth of focus will be $\pm 6.3 \times 0.1 = \pm 0.63 \text{ mm}$. On the other hand if you “stop down” to $f/22$, your depth of focus will be $2.2 \text{ mm}$.
-            </p>
-            
-            <h3>Small Angles & Realism</h3>
-            <p>
-                Notice that the tangent of the semi angle of the converging cone is $R/q$ or $D/2q$. For apertures of $f/6.3$ and $f/22$, the semi angles are $4.5^\circ$ and $2.6^\circ$ respectively. This may give some comfort to those readers who have been uncomfortable with our assumption that angles are small.
-            </p>
-
-            <h3>Depth of Field vs Depth of Focus</h3>
-            <p>
-                Depth of focus is not the same thing as depth of field. Suppose we want to photograph an object at a distance $p$ from the camera lens, and that we are prepared to tolerate an out-of-focus “image” of diameter up to $d$. Any object at a distance within the range $\Delta p$ may satisfy this.
-            </p>
-            <p>
-                We have essentially two sets of similar triangles to compare: one outside the camera (object space) and one inside (image space). Since $m = v/u$ (or $q/p$), a small shift in the image plane corresponds to a much larger shift in the object plane ($\Delta p \approx \Delta q / m^2$), meaning Depth of Field is typically much larger than Depth of Focus.
-            </p>
-        </div>
-
         <div class="lab-wrapper">
             <canvas id="lens-canvas"></canvas>
             <div class="controls-bar">
@@ -384,18 +449,144 @@
                 <div class="slider-group">
                     <label>Focal Length ($f$): <span id="l-f-val"></span></label>
                     <input type="range" id="l-f-input" min="-150" max="150" value="100">
-                    <small>Pos=Convex, Neg=Concave</small>
+                    <small style="color:#666; font-size: 0.75rem;">Pos=Convex, Neg=Concave</small>
                 </div>
             </div>
              <div class="stats-panel">
                 <div id="l-calc-res"></div>
-                <div id="l-calc-props"></div>
+                <div id="l-calc-props" style="text-align: right;"></div>
+            </div>
+        </div>
+        
+        <div class="advanced-read">
+            <h3>The Mechanics of Capture</h3>
+            <p>
+                The camera is a box with a lens in one side of it and a photographic film or a CCD on the opposite side. The distance between camera lens and film can be changed so as to focus on objects at various distances. The <strong>aperture</strong> can also be changed.
+            </p>
+            <p>
+                In dim light you need to open the aperture up to let a lot of light in; but this makes the image less sharp, and you have a smaller depth of field. The aperture of a lens is merely its diameter, and it is usually expressed as a fraction of the focal length. Thus an aperture of $f/22$ is a small aperture. You can use this only in strong light, but you will then have nice sharp images and a large depth of field. An aperture of $f/6.3$ is wide open; the cone of light inside the camera is quite steep, and focussing is then quite critical.
+            </p>
+            
+            <h3>Depth of Focus: A Triangle Problem</h3>
+            <p>
+                How is the depth of focus related to the aperture? Imagine a cone of light converging from a lens of radius $R$ to a focal point at distance $q$. Let us suppose that we place a film or CCD at a distance $x$ from the focal point, and that we are prepared to tolerate an out-of-focus “image” of radius $r$. From similar triangles we see that $x/r = q/R$.
+            </p>
+            <p>
+                Thus we can place the film at a distance:
+                $$ x = q \frac{d}{D} $$
+                on either side of the true focal plane without appreciable degradation of the image. For example, if the aperture is $f/6.3$ and you tolerate $d = 0.1 \text{ mm}$, the depth of focus will be $\pm 0.63 \text{ mm}$.
+            </p>
+            
+            <h3>Depth of Field vs Depth of Focus</h3>
+            <p>
+                Depth of focus is not the same thing as depth of field. We have essentially two sets of similar triangles to compare: one outside the camera (object space) and one inside (image space). Since $m = v/u$ (or $q/p$), a small shift in the image plane corresponds to a much larger shift in the object plane ($\Delta p \approx \Delta q / m^2$), meaning Depth of Field is typically much larger than Depth of Focus.
+            </p>
+        </div>
+        
+        <h3 id="sec-focus">5.1 The Physics of Photography: Cameras</h3>
+        <div class="textbook-section">
+            <p>
+                The concept of <em>image</em> plays an equally important role in the analysis of optical instruments. Among the most common optical devices are <strong>cameras</strong>.
+                The basic elements of a camera are a light-tight box (“camera” is a Latin word meaning “a room or enclosure”), a converging lens, a shutter, and a light-sensitive recording medium.
+            </p>
+            <p>
+                <strong>Focusing:</strong> When the camera is in proper <em>focus</em>, the position of the recording medium coincides with the position of the real image formed by the lens.
+            </p>
+            <div class="lab-wrapper">
+                <canvas id="focus-canvas"></canvas>
+                <div class="controls-bar">
+                    <div class="slider-group">
+                        <label>Object Distance: <span id="fc-u-val">Far</span></label>
+                        <input type="range" id="fc-u-input" min="300" max="1000" value="800">
+                    </div>
+                    <div class="slider-group">
+                        <label style="color:var(--accent);">Lens Position (Drag to Focus): <span id="fc-v-val"></span></label>
+                        <input type="range" id="fc-v-input" min="50" max="150" value="60">
+                    </div>
+                </div>
+                <div class="stats-panel">
+                    <div id="fc-status" style="font-weight:bold;">Status: Checking Focus...</div>
+                    <div style="text-align:right">Key elements of a camera</div>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="sec-fov">5.2 Focal Length and Angle of View</h3>
+        <div class="textbook-section">
+            <p>
+                The choice of the focal length $f$ for a camera lens depends on the film size and the desired <strong>angle of view</strong>.
+            </p>
+            <ul>
+                <li><strong>Long focal length (Telephoto):</strong> Gives a small angle of view and a large image of a distant object (like the statue in the simulation below).</li>
+                <li><strong>Short focal length (Wide-angle):</strong> Gives a small image and a wide angle of view.</li>
+            </ul>
+            <p>
+                Lateral magnification is proportional to the ratio of image distance $s'$ to object distance $s$:
+                $$ m = \frac{y'}{y} = -\frac{s'}{s} $$
+            </p>
+            <div class="lab-wrapper">
+                <canvas id="horse-canvas"></canvas>
+                <div class="controls-bar">
+                    <div class="slider-group">
+                        <label>Focal Length ($f$): <span id="horse-f-val">50</span> mm</label>
+                        <input type="range" id="horse-f-input" min="28" max="300" value="50">
+                        <small style="color:#666; font-size: 0.75rem;">28mm (Wide) to 300mm (Tele)</small>
+                    </div>
+                </div>
+                <div class="stats-panel">
+                    <div id="horse-angle">Angle of View: --°</div>
+                    <div style="text-align: right;">Simulated View: Equestrian Statue</div>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="sec-aperture">5.3 f-Number</h3>
+        <div class="textbook-section">
+            <p>
+                The light-gathering capability of a lens is commonly expressed by photographers in terms of the ratio $f/D$, called the <strong>$f$-number</strong> of the lens:
+                $$ f\text{-number} = \frac{\text{Focal length}}{\text{Aperture diameter}} = \frac{f}{D} $$
+                Adjustable apertures usually have scales labeled with successive numbers (often called $f$-stops) related by factors of $\sqrt{2}$, such as $f/2, f/2.8, f/4, f/5.6, f/8$.
+            </p>
+            <div class="lab-wrapper">
+                <canvas id="aperture-canvas"></canvas>
+                <div class="controls-bar">
+                    <div class="slider-group">
+                        <label>Aperture Diameter ($D$): <span id="ap-d-val"></span> mm</label>
+                        <input type="range" id="ap-d-input" min="2" max="50" step="0.5" value="17">
+                    </div>
+                </div>
+                <div class="stats-panel">
+                    <div id="ap-res">f-Stop: f/2.8</div>
+                    <div id="ap-exp" style="text-align: right;">Brightness: 100%</div>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="sec-zoom">5.4 Zoom Lenses</h3>
+        <div class="textbook-section">
+            <p>
+                Many photographers use a <strong>zoom lens</strong>, which is not a single lens but a complex collection of several lens elements that give a continuously variable focal length.
+            </p>
+            <p>
+                Zoom lenses give a range of image sizes of a given object. It is an enormously complex problem in optical design to keep the image in focus and maintain a constant $f$-number while the focal length changes.
+            </p>
+             <div class="lab-wrapper">
+                <canvas id="zoom-canvas"></canvas>
+                <div class="controls-bar">
+                    <div class="slider-group">
+                        <label>Zoom Ring: <span id="z-val">Wide</span></label>
+                        <input type="range" id="z-input" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <div class="stats-panel">
+                    <div>Optical Configuration</div>
+                    <div style="text-align: right;">Moving Elements Schematic</div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- CHAPTER 6: APPLICATIONS (EYE) -->
-    <section>
+    <section id="chap6">
         <h2>Chapter 6: Scaling Reality (The Eye)</h2>
         <p class="narrative">
             In the human eye, the distance to the "screen" (retina) is fixed. To see objects at different distances, the eye must change its shape (Accommodation).
@@ -418,8 +609,7 @@
         </div>
     </section>
 
-    <!-- CHAPTER 7: TELESCOPE -->
-    <section>
+    <section id="chap7">
         <h2>Chapter 7: The Telescope (Angular Geometry)</h2>
         <p class="narrative">
             A telescope works by <strong>Angular Magnification</strong>. It uses an Objective lens to create an image, and an Eyepiece to magnify it.
@@ -438,13 +628,43 @@
             </div>
             <div class="stats-panel">
                 <div id="t-calc-res"></div>
-                <div>Condition: Normal Adjustment ($L = f_o + f_e$)</div>
+                <div style="text-align: right;">Condition: Normal Adjustment ($L = f_o + f_e$)</div>
             </div>
         </div>
     </section>
 
-    <!-- SUMMARY -->
-    <section>
+    <section id="chap8">
+        <h2>Chapter 8: When Light Becomes a Wave</h2>
+        <p class="narrative">
+            So far, we have treated light as rays traveling in straight lines. This is <strong>Geometrical Optics</strong>. But if you look very closely at the edge of a shadow, or pass light through a tiny slit, the ray model breaks down.
+        </p>
+        <p class="narrative">
+            Light is a wave. When two waves meet, they interfere. If the peak of one meets the peak of another, they add up (Constructive). If a peak meets a trough, they cancel out (Destructive). This is the famous <strong>Young's Double Slit Experiment</strong>.
+        </p>
+        <div class="lab-wrapper">
+            <canvas id="wave-canvas"></canvas>
+            <div class="controls-bar">
+                <div class="slider-group">
+                    <label>Slit Separation ($d$): <span id="w-d-val"></span></label>
+                    <input type="range" id="w-d-input" min="5" max="30" value="10">
+                </div>
+                <div class="slider-group">
+                    <label>Wavelength ($\lambda$): <span id="w-l-val"></span></label>
+                    <input type="range" id="w-l-input" min="400" max="700" value="550">
+                    <small id="w-color-name" style="color:#666; font-size: 0.75rem;">Green</small>
+                </div>
+            </div>
+            <div class="stats-panel">
+                <div id="w-stats-1">Interference Pattern</div>
+                <div style="text-align: right;">$d \sin\theta = m\lambda$</div>
+            </div>
+        </div>
+        <p class="narrative">
+            The bright spots on the screen appear where the path difference is a whole number of wavelengths. This proved that light is not just a particle, but a wave.
+        </p>
+    </section>
+
+    <section id="summary">
         <h2>Summary: The Mathematics of Copying</h2>
         <p class="narrative">
             We have seen that $m = v/u$ is not just a formula. It is the statement that the shape of light is preserved.
@@ -464,83 +684,67 @@
     </section>
 
 </div>
-
 <script>
 /**
- * 2. HD CANVAS SUPPORT
- * Utility to handle Retina/High-DPI displays for crisp rendering and fit.
+ * UTILS - HIGH DPI SUPPORT (Imported from Index File for Crisp Rendering)
  */
 function setupCanvas(canvas) {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    
-    // Set actual size in memory (scaled to account for extra pixel density)
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    
-    // Normalize coordinate system to use css pixels
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-    
     return ctx;
 }
 
+function toggleTOC() {
+    document.getElementById('toc').classList.toggle('active');
+}
+
 /**
- * THE OPTICS ENGINE
- * Handles ray tracing, geometric logic, and rendering.
+ * 1. ORIGINAL OPTICS ENGINE (Pinhole, Mirror, Lens)
  */
 class OpticsSystem {
     constructor(canvasId, type) {
         this.canvas = document.getElementById(canvasId);
-        // Use the HD setup
         this.ctx = setupCanvas(this.canvas);
-        
-        this.type = type; // 'mirror', 'lens', 'eye', 'pinhole'
-        
-        // Physics State
+        this.type = type; 
         this.u = -200;
         this.f = type === 'mirror' ? -80 : 100;
         this.v = 0; 
         this.m = 0;
-        this.h_o = 50; // Object height
+        this.h_o = 50; 
         this.h_i = 0;
-        
-        // Visualization State
         this.showPoleTriangles = false;
         this.showCenterTriangles = false;
         
-        // Canvas Setup (Logical coordinates)
+        this.updateDims();
+        this.attachResizeListener();
+    }
+
+    updateDims() {
         this.width = this.canvas.getBoundingClientRect().width;
         this.height = this.canvas.getBoundingClientRect().height;
-        
         this.ox = this.width * 0.5;
         this.oy = this.height / 2;
-        if (type !== 'pinhole') this.ox = this.width * 0.6; // Shift origin for lens/mirror
-
-        this.attachResizeListener();
+        if (this.type !== 'pinhole') this.ox = this.width * 0.6;
     }
 
     attachResizeListener() {
         window.addEventListener('resize', () => {
-            // Re-setup canvas for new size
             this.ctx = setupCanvas(this.canvas);
-            this.width = this.canvas.getBoundingClientRect().width;
-            this.height = this.canvas.getBoundingClientRect().height;
-            this.ox = this.type === 'pinhole' ? this.width * 0.5 : this.width * 0.6;
-            this.oy = this.height / 2;
+            this.updateDims();
             this.draw();
         });
     }
 
     calculate() {
         if (this.type === 'pinhole') {
-            // Pinhole: v is the screen distance (input), not derived from f
-            // Magnification m = v / u (magnitude)
             this.m = this.v / Math.abs(this.u);
             this.h_i = this.h_o * this.m;
         } 
         else if (this.type === 'mirror') {
-            // 1/v + 1/u = 1/f
             if (this.u === this.f) { this.v = Infinity; this.m = Infinity; }
             else {
                 this.v = (this.u * this.f) / (this.u - this.f);
@@ -548,7 +752,6 @@ class OpticsSystem {
                 this.h_i = this.h_o * this.m;
             }
         } else {
-            // Lens: 1/v - 1/u = 1/f
             if (this.u === -this.f) { this.v = Infinity; this.m = Infinity; }
             else {
                 this.v = (this.u * this.f) / (this.u + this.f);
@@ -567,86 +770,38 @@ class OpticsSystem {
         ctx.save();
         ctx.translate(this.ox, this.oy);
         
-        // Axis
         ctx.strokeStyle = this.type === 'pinhole' ? '#78909c' : '#cfd8dc';
         ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(-this.ox, 0);
-        ctx.lineTo(w - this.ox, 0);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-this.ox, 0); ctx.lineTo(w - this.ox, 0); ctx.stroke();
 
-        if (this.type === 'pinhole') {
-            this.drawPinhole(ctx);
-        } else {
-            this.drawStandardOptics(ctx);
-        }
+        if (this.type === 'pinhole') this.drawPinhole(ctx);
+        else this.drawStandardOptics(ctx);
 
         ctx.restore();
     }
 
     drawPinhole(ctx) {
-        // Draw Wall
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(0, -150); ctx.lineTo(0, -5);
-        ctx.moveTo(0, 5); ctx.lineTo(0, 150);
-        ctx.stroke();
-
-        // Draw Box Interior
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(0, -150, this.v, 300);
-        
-        // Draw Screen
-        ctx.strokeStyle = '#b0bec5';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(this.v, -150); ctx.lineTo(this.v, 150);
-        ctx.stroke();
-        ctx.fillStyle = '#cfd8dc';
-        ctx.font = "12px sans-serif";
-        ctx.fillText("Screen", this.v + 5, -140);
-
-        // Object (Abstract Arrow)
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, -150); ctx.lineTo(0, -5); ctx.moveTo(0, 5); ctx.lineTo(0, 150); ctx.stroke();
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0, -150, this.v, 300);
+        ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(this.v, -150); ctx.lineTo(this.v, 150); ctx.stroke();
+        ctx.fillStyle = '#cfd8dc'; ctx.font = "12px sans-serif"; ctx.fillText("Screen", this.v + 5, -140);
         this.drawArrow(ctx, this.u, -this.h_o, '#4caf50', 'Object'); 
-
-        // Image (Inverted Arrow)
         this.drawArrow(ctx, this.v, this.h_i, '#ffab91', 'Image');
-
-        // Rays
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = '#ffeb3b'; 
-        ctx.globalAlpha = 0.8;
-        
-        // Top -> Bottom
+        ctx.lineWidth = 1; ctx.strokeStyle = '#ffeb3b'; ctx.globalAlpha = 0.8;
         ctx.beginPath(); ctx.moveTo(this.u, -this.h_o); ctx.lineTo(this.v, this.h_i); ctx.stroke();
-        // Base -> Base
         ctx.beginPath(); ctx.moveTo(this.u, 0); ctx.lineTo(this.v, 0); ctx.stroke();
-
-        // Triangle Hints
-        ctx.fillStyle = 'rgba(76, 175, 80, 0.1)';
-        ctx.beginPath(); ctx.moveTo(this.u, -this.h_o); ctx.lineTo(this.u, 0); ctx.lineTo(0, 0); ctx.fill();
-
-        ctx.fillStyle = 'rgba(255, 87, 34, 0.1)';
-        ctx.beginPath(); ctx.moveTo(this.v, this.h_i); ctx.lineTo(this.v, 0); ctx.lineTo(0, 0); ctx.fill();
-        
-        ctx.globalAlpha = 1.0;
-        ctx.fillStyle = "#333";
-        ctx.fillText("Pinhole", -20, 20);
+        ctx.globalAlpha = 1.0; ctx.fillStyle = "#333"; ctx.fillText("Pinhole", -20, 20);
     }
 
     drawStandardOptics(ctx) {
         this.drawElement(ctx);
         this.drawPoints(ctx);
-        
-        // Object
         this.drawArrow(ctx, this.u, -this.h_o, '#2e7d32', 'O');
-
-        // Image & Rays
         if (Math.abs(this.v) < 5000 && Math.abs(this.v) > 1) {
             this.drawArrow(ctx, this.v, -this.h_i, '#c62828', 'I');
             this.drawRays(ctx);
-            
             if (this.type === 'mirror') {
                 if (this.showPoleTriangles) this.drawPoleTriangles(ctx);
                 if (this.showCenterTriangles) this.drawCenterTriangles(ctx);
@@ -655,53 +810,30 @@ class OpticsSystem {
     }
 
     drawElement(ctx) {
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#37474f';
-        ctx.fillStyle = 'rgba(236, 239, 241, 0.5)';
-        
+        ctx.lineWidth = 3; ctx.strokeStyle = '#37474f'; ctx.fillStyle = 'rgba(236, 239, 241, 0.5)';
         if (this.type === 'mirror') {
             ctx.beginPath();
             const curve = this.f < 0 ? -15 : 15; 
-            ctx.moveTo(0, -100);
-            ctx.quadraticCurveTo(curve, 0, 0, 100);
-            ctx.stroke();
-            // Hatching
-            ctx.beginPath();
-            ctx.strokeStyle = '#b0bec5';
-            ctx.lineWidth = 1;
+            ctx.moveTo(0, -100); ctx.quadraticCurveTo(curve, 0, 0, 100); ctx.stroke();
+            ctx.beginPath(); ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 1;
             for(let y=-100; y<=100; y+=10) {
                 if(this.f < 0) { ctx.moveTo(0,y); ctx.lineTo(5,y+5); } 
                 else { ctx.moveTo(0,y); ctx.lineTo(-5,y+5); }
             }
             ctx.stroke();
         } else {
-            // Lens
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 10, 100, 0, 0, Math.PI*2);
-            ctx.fill();
-            ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(0, 0, 10, 100, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         }
     }
 
     drawArrow(ctx, x, h, color, label) {
+        ctx.beginPath(); ctx.lineWidth = 3; ctx.strokeStyle = color;
+        ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
         ctx.beginPath();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = color;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
-        
-        ctx.beginPath();
-        const dir = h < 0 ? -1 : 1; // if h is neg (up), dir is -1
-        ctx.moveTo(x, h);
-        ctx.lineTo(x-5, h - dir*8);
-        ctx.lineTo(x+5, h - dir*8);
-        ctx.closePath();
-        ctx.fillStyle = color;
-        ctx.fill();
-
-        ctx.font = "bold 14px sans-serif";
-        ctx.fillStyle = color; // Fix color being overridden
+        const dir = h < 0 ? -1 : 1; 
+        ctx.moveTo(x, h); ctx.lineTo(x-5, h - dir*8); ctx.lineTo(x+5, h - dir*8); ctx.closePath();
+        ctx.fillStyle = color; ctx.fill();
+        ctx.font = "bold 14px sans-serif"; ctx.fillStyle = color; 
         ctx.fillText(label, x-10, h - dir*15);
     }
 
@@ -709,26 +841,20 @@ class OpticsSystem {
         ctx.fillStyle = '#455a64';
         const pts = [{x: this.f, t: 'F'}, {x: 2*this.f, t: this.type==='mirror'?'C':'2F'}];
         if(this.type === 'lens') { pts.push({x:-this.f, t:"F'"}, {x:-2*this.f, t:"2F'"}); }
-        
         pts.forEach(p => {
             ctx.beginPath(); ctx.arc(p.x, 0, 3, 0, Math.PI*2); ctx.fill();
             ctx.fillText(p.t, p.x-5, 15);
         });
-        ctx.fillText(this.type==='mirror'?'P':'O', 2, 15);
     }
 
     drawRays(ctx) {
         const objHead = {x: this.u, y: -this.h_o};
         const imgHead = {x: this.v, y: -this.h_i}; 
-
         ctx.lineWidth = 1.5;
-        
-        // Ray 1: Parallel -> Focus
         this.traceRay(ctx, objHead.x, objHead.y, 0, objHead.y, '#ef6c00'); 
         if(this.type==='mirror') this.traceRay(ctx, 0, objHead.y, imgHead.x, imgHead.y, '#ef6c00'); 
         else this.traceRay(ctx, 0, objHead.y, imgHead.x, imgHead.y, '#ef6c00');
 
-        // Ray 2: Center 
         if (this.type === 'mirror') {
             this.traceRay(ctx, objHead.x, objHead.y, 0, 0, '#0097a7');
             this.traceRay(ctx, 0, 0, imgHead.x, imgHead.y, '#0097a7');
@@ -738,574 +864,380 @@ class OpticsSystem {
     }
 
     traceRay(ctx, x1, y1, x2, y2, color) {
-        ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
+        ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
     }
 
-    // --- TRIANGLE VISUALIZERS ---
-    drawPoleTriangles(ctx) {
-        this.fillTriangle(ctx, this.u, -this.h_o, 0, 0, this.u, 0, 'rgba(46, 125, 50, 0.2)');
-        this.fillTriangle(ctx, this.v, -this.h_i, 0, 0, this.v, 0, 'rgba(46, 125, 50, 0.2)');
-    }
-    drawCenterTriangles(ctx) {
-        const C = 2 * this.f;
-        this.fillTriangle(ctx, this.u, -this.h_o, C, 0, this.u, 0, 'rgba(198, 40, 40, 0.2)');
-        this.fillTriangle(ctx, this.v, -this.h_i, C, 0, this.v, 0, 'rgba(198, 40, 40, 0.2)');
-    }
-    fillTriangle(ctx, x1, y1, x2, y2, x3, y3, color) {
-        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath();
-        ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = color.replace('0.2', '0.8'); ctx.stroke();
-    }
-    toggleTriangles(set) {
-        if(set === 'pole') {
-            this.showPoleTriangles = !this.showPoleTriangles;
-            document.getElementById('btn-tri-pole').classList.toggle('active');
-        } else {
-            this.showCenterTriangles = !this.showCenterTriangles;
-            document.getElementById('btn-tri-center').classList.toggle('active');
-        }
-        this.draw();
-    }
+    drawPoleTriangles(ctx) { this.fillTriangle(ctx, this.u, -this.h_o, 0, 0, this.u, 0, 'rgba(46, 125, 50, 0.2)'); this.fillTriangle(ctx, this.v, -this.h_i, 0, 0, this.v, 0, 'rgba(46, 125, 50, 0.2)'); }
+    drawCenterTriangles(ctx) { const C = 2 * this.f; this.fillTriangle(ctx, this.u, -this.h_o, C, 0, this.u, 0, 'rgba(198, 40, 40, 0.2)'); this.fillTriangle(ctx, this.v, -this.h_i, C, 0, this.v, 0, 'rgba(198, 40, 40, 0.2)'); }
+    fillTriangle(ctx, x1, y1, x2, y2, x3, y3, color) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = color.replace('0.2', '0.8'); ctx.stroke(); }
+    toggleTriangles(set) { if(set === 'pole') { this.showPoleTriangles = !this.showPoleTriangles; document.getElementById('btn-tri-pole').classList.toggle('active'); } else { this.showCenterTriangles = !this.showCenterTriangles; document.getElementById('btn-tri-center').classList.toggle('active'); } this.draw(); }
 }
 
 /**
- * NEW SYSTEM: REALISTIC CAMERA OBSCURA (ASHOKA TREE)
- * Renders the Real Tree outside and the Inverted Tree inside.
+ * 2. CAMERA OBSCURA (ASHOKA TREE) - (Preserved)
  */
 class CameraObscuraSystem {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = setupCanvas(this.canvas);
-        
-        this.d1 = 120; // Object Distance
-        this.d2 = 150; // Image Distance (Depth)
-        this.h_o = 60; // Tree Height
-        
+        this.d1 = 120; this.d2 = 150; this.h_o = 60; 
         this.attachResizeListener();
     }
-    
-    attachResizeListener() {
-        window.addEventListener('resize', () => {
-            this.ctx = setupCanvas(this.canvas);
-            this.draw();
-        });
-    }
-    
+    attachResizeListener() { window.addEventListener('resize', () => { this.ctx = setupCanvas(this.canvas); this.draw(); }); }
     draw() {
-        const ctx = this.ctx;
-        const w = this.canvas.getBoundingClientRect().width;
-        const h = this.canvas.getBoundingClientRect().height;
-        const split = w * 0.6; // Split screen for Side View vs Screen View
-        
-        ctx.clearRect(0,0,w,h);
-        
-        // --- LEFT SIDE: SIDE VIEW ---
-        ctx.save();
-        ctx.translate(50, h/2);
-        
-        // Coordinates: (0,0) is the Pinhole.
-        // X axis is the optical axis.
-        // Y axis vertical (Positive Down).
-        
-        // Draw Ground Line outside
-        // Tree base is at y = +40 (below axis). 
-        const groundY = 40;
-        
-        // 1. Draw Ashoka Tree (Object) at x = -d1
-        const treeX = -this.d1;
-        // Tree Top y = groundY - height.
-        const treeTopY = groundY - this.h_o;
-        
-        this.drawAshokaTree(ctx, treeX, groundY, this.h_o, false); // Upright
-        
-        // Draw Ground Line
-        ctx.strokeStyle = '#795548';
-        ctx.beginPath(); ctx.moveTo(treeX - 20, groundY); ctx.lineTo(0, groundY); ctx.stroke();
-        
-        // 2. Aperture Wall
-        ctx.fillStyle = '#333';
-        ctx.fillRect(0, -60, 4, 120); // Barrier at x=0
-        ctx.clearRect(0, -2, 4, 4); // Hole
-        
-        // 3. Dark Room Box
-        ctx.fillStyle = 'rgba(33, 33, 33, 0.1)';
-        ctx.fillRect(0, -70, this.d2, 140);
-        ctx.strokeStyle = '#424242';
-        ctx.strokeRect(0, -70, this.d2, 140);
-        
-        // 4. Screen at x = d2
+        const ctx = this.ctx; const w = this.canvas.getBoundingClientRect().width; const h = this.canvas.getBoundingClientRect().height; const split = w * 0.6;
+        ctx.clearRect(0,0,w,h); ctx.save(); ctx.translate(50, h/2);
+        const groundY = 40; const treeX = -this.d1; const treeTopY = groundY - this.h_o;
+        this.drawAshokaTree(ctx, treeX, groundY, this.h_o, false);
+        ctx.strokeStyle = '#795548'; ctx.beginPath(); ctx.moveTo(treeX - 20, groundY); ctx.lineTo(0, groundY); ctx.stroke();
+        ctx.fillStyle = '#333'; ctx.fillRect(0, -60, 4, 120); ctx.clearRect(0, -2, 4, 4); 
+        ctx.fillStyle = 'rgba(33, 33, 33, 0.1)'; ctx.fillRect(0, -70, this.d2, 140); ctx.strokeStyle = '#424242'; ctx.strokeRect(0, -70, this.d2, 140);
         const screenX = this.d2;
-        ctx.fillStyle = '#90a4ae';
-        ctx.fillRect(screenX, -70, 4, 140);
-        ctx.fillStyle = '#37474f';
-        ctx.fillText("Screen", screenX-20, -80);
-        
-        // 5. Inverted Image Geometry
-        // Magnification M = d2 / d1
-        const M = this.d2 / this.d1;
-        const imgH = this.h_o * M;
-        
-        // Ray Tracing Logic
-        // Top Ray: (-d1, treeTopY) -> (0,0) -> (d2, imgTopY)
-        // imgTopY = -treeTopY * (d2/d1) = -treeTopY * M
-        // treeTopY is neg (e.g. -20). So imgTopY is pos (e.g. +25). -> Projecting "Down".
-        const imgTopY = treeTopY * (-M); // y coordinate of tip
-        
-        // Base Ray: (-d1, groundY) -> (0,0) -> (d2, imgBaseY)
-        // imgBaseY = -groundY * M.
-        // groundY is pos (e.g. +40). So imgBaseY is neg (e.g. -50). -> Projecting "Up".
-        const imgBaseY = groundY * (-M); 
-        
-        // Draw Inverted Tree at Screen
-        // Base is at imgBaseY (Top, Negative Y). Tip is at imgTopY (Bottom, Positive Y).
-        // This means the "ground" of the image is on the ceiling!
+        ctx.fillStyle = '#90a4ae'; ctx.fillRect(screenX, -70, 4, 140); ctx.fillStyle = '#37474f'; ctx.fillText("Screen", screenX-20, -80);
+        const M = this.d2 / this.d1; const imgH = this.h_o * M; const imgTopY = treeTopY * (-M); const imgBaseY = groundY * (-M); 
         this.drawAshokaTree(ctx, screenX, imgBaseY, imgH, true);
-        
-        // 6. Draw Explicit Rays with "Selection" Effect
-        // Faint Blocked Rays from Top
-        ctx.strokeStyle = 'rgba(211, 47, 47, 0.1)'; // Faint Red
-        ctx.lineWidth = 1;
-        for(let dy = -20; dy <= 20; dy+=5) {
-            ctx.beginPath(); ctx.moveTo(treeX, treeTopY); ctx.lineTo(0, dy); ctx.stroke();
-        }
-        
-        // THE RED RAY (Top -> Bottom)
-        ctx.strokeStyle = '#d32f2f'; // Red
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(treeX, treeTopY); ctx.lineTo(screenX, imgTopY); ctx.stroke();
-        // Arrowhead on ray
-        this.drawRayArrow(ctx, treeX*0.5, treeTopY + (0-treeTopY)*0.5, Math.atan2(-treeTopY, -treeX));
-
-        // THE BLUE RAY (Bottom -> Top)
-        ctx.strokeStyle = '#1976d2'; // Blue
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(treeX, groundY); ctx.lineTo(screenX, imgBaseY); ctx.stroke();
-        // Arrowhead on ray
-        this.drawRayArrow(ctx, treeX*0.5, groundY + (0-groundY)*0.5, Math.atan2(-groundY, -treeX));
-        
+        ctx.strokeStyle = 'rgba(211, 47, 47, 0.1)'; ctx.lineWidth = 1;
+        for(let dy = -20; dy <= 20; dy+=5) { ctx.beginPath(); ctx.moveTo(treeX, treeTopY); ctx.lineTo(0, dy); ctx.stroke(); }
+        ctx.strokeStyle = '#d32f2f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(treeX, treeTopY); ctx.lineTo(screenX, imgTopY); ctx.stroke();
+        ctx.strokeStyle = '#1976d2'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(treeX, groundY); ctx.lineTo(screenX, imgBaseY); ctx.stroke();
         ctx.restore();
-        
-        // --- RIGHT SIDE: SCREEN VIEW ---
-        // Separator
-        ctx.strokeStyle = '#ccc';
-        ctx.beginPath(); ctx.moveTo(split, 0); ctx.lineTo(split, h); ctx.stroke();
-        
-        ctx.save();
-        ctx.translate(split + (w-split)/2, h/2);
-        
-        // Draw "View inside the box" (Circular view)
-        ctx.fillStyle = '#212121';
-        ctx.beginPath(); ctx.arc(0,0, 100, 0, Math.PI*2); ctx.fill();
-        
-        // Draw Inverted Tree Centered
-        // The tree spans from imgBaseY (top/neg) to imgTopY (bottom/pos).
-        // We want to center this span on the view (0,0).
-        const centerOffset = (imgBaseY + imgTopY) / 2;
-        ctx.translate(0, -centerOffset);
-        
-        this.drawAshokaTree(ctx, 0, imgBaseY, imgH, true);
-        
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = '#fff';
-        ctx.font = "14px sans-serif";
-        ctx.fillText("View on Wall", -40, 120);
-        ctx.font = "12px monospace";
-        ctx.fillStyle = '#bbb';
-        ctx.fillText(`Scale: ${M.toFixed(1)}x`, -30, 140);
-        
-        ctx.restore();
+        ctx.strokeStyle = '#ccc'; ctx.beginPath(); ctx.moveTo(split, 0); ctx.lineTo(split, h); ctx.stroke();
+        ctx.save(); ctx.translate(split + (w-split)/2, h/2); ctx.fillStyle = '#212121'; ctx.beginPath(); ctx.arc(0,0, 100, 0, Math.PI*2); ctx.fill();
+        ctx.translate(0, -(imgBaseY + imgTopY) / 2); this.drawAshokaTree(ctx, 0, imgBaseY, imgH, true);
+        ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.font = "14px sans-serif"; ctx.fillText("View on Wall", -40, 120); ctx.restore();
     }
-    
-    drawRayArrow(ctx, x, y, angle) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.moveTo(-5, -3); ctx.lineTo(0,0); ctx.lineTo(-5, 3);
-        ctx.stroke();
-        ctx.restore();
-    }
-    
     drawAshokaTree(ctx, x, yBase, h, inverted) {
-        // Ashoka tree: Tall, narrow, conical.
-        // yBase: The Y coordinate where the trunk starts.
-        // h: The height of the tree.
-        // inverted: If true, the tree grows visually DOWN from yBase to yTip.
-        //           If false, the tree grows visually UP from yBase to yTip.
-        // Note: In Canvas, +Y is Down. 
-        // So Up means yTip < yBase. Down means yTip > yBase.
-        
-        const yTip = inverted ? yBase + h : yBase - h;
-        const width = h * 0.25; 
-        
-        ctx.save();
-        
-        // Trunk
-        ctx.strokeStyle = '#5d4037';
-        ctx.lineWidth = h * 0.08;
-        ctx.beginPath();
-        ctx.moveTo(x, yBase);
-        ctx.lineTo(x, inverted ? yBase + h*0.15 : yBase - h*0.15);
-        ctx.stroke();
-        
-        // Foliage (Deep Green)
+        const yTip = inverted ? yBase + h : yBase - h; const width = h * 0.25; 
+        ctx.save(); ctx.strokeStyle = '#5d4037'; ctx.lineWidth = h * 0.08;
+        ctx.beginPath(); ctx.moveTo(x, yBase); ctx.lineTo(x, inverted ? yBase + h*0.15 : yBase - h*0.15); ctx.stroke();
         ctx.fillStyle = inverted ? 'rgba(129, 199, 132, 0.9)' : '#2e7d32'; 
-        ctx.beginPath();
-        ctx.moveTo(x, yTip); // Tip
-        
-        // Draw undulating sides
-        ctx.bezierCurveTo(
-            x - width, (yBase+yTip)/2, 
-            x - width/2, yBase, 
-            x, yBase - (inverted?-h*0.1:h*0.1) // Trunk junction
-        );
-        ctx.bezierCurveTo(
-            x + width/2, yBase,
-            x + width, (yBase+yTip)/2,
-            x, yTip
-        );
-        
-        ctx.fill();
-        ctx.restore();
+        ctx.beginPath(); ctx.moveTo(x, yTip); 
+        ctx.bezierCurveTo(x - width, (yBase+yTip)/2, x - width/2, yBase, x, yBase - (inverted?-h*0.1:h*0.1));
+        ctx.bezierCurveTo(x + width/2, yBase, x + width, (yBase+yTip)/2, x, yTip);
+        ctx.fill(); ctx.restore();
     }
 }
 
 /**
- * GRAPH SYSTEM
+ * 3. NEW: CAMERA FOCUSING SYSTEM
  */
-class GraphSystem {
-    constructor() {
-        this.canvas = document.getElementById('graph-canvas');
-        this.ctx = setupCanvas(this.canvas);
-    }
-
-    draw(u, v, f) {
-        const ctx = this.ctx;
-        const w = this.canvas.getBoundingClientRect().width;
-        const h = this.canvas.getBoundingClientRect().height;
-        
-        if (!isFinite(v)) return;
-        ctx.clearRect(0,0,w,h);
-        
-        const scale = 3000; 
-        const ox = w/2;
-        const oy = h/2;
-        
-        ctx.strokeStyle = '#aaa';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, oy); ctx.lineTo(w, oy); 
-        ctx.moveTo(ox, 0); ctx.lineTo(ox, h); 
-        ctx.stroke();
-        
-        ctx.font = "12px sans-serif";
-        ctx.fillStyle = "#666";
-        ctx.fillText("1/u", w-30, oy - 10);
-        ctx.fillText("1/v", ox + 10, 20);
-
-        const invF = 1/f;
-        ctx.strokeStyle = '#2196f3';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        const x_min = (0 - ox)/scale;
-        const y_at_min = -x_min + invF;
-        const x_max = (w - ox)/scale;
-        const y_at_max = -x_max + invF;
-        ctx.moveTo(ox + x_min*scale, oy - y_at_min*scale);
-        ctx.lineTo(ox + x_max*scale, oy - y_at_max*scale);
-        ctx.stroke();
-
-        const curX = 1/u;
-        const curY = 1/v;
-        ctx.fillStyle = '#ff6f00';
-        ctx.beginPath(); ctx.arc(ox + curX*scale, oy - curY*scale, 6, 0, Math.PI*2); ctx.fill();
-    }
-}
-
-/**
- * EYE SYSTEM (Extension)
- */
-class EyeSystem extends OpticsSystem {
-    constructor(canvasId) {
-        super(canvasId, 'lens');
-        this.retinaX = 180;
-        this.u = -300;
-        this.f = 90;
-        this.ox = this.width * 0.4;
-    }
-    
-    // Override resize to maintain Eye specific offsets
-    attachResizeListener() {
-        window.addEventListener('resize', () => {
-            this.ctx = setupCanvas(this.canvas);
-            this.width = this.canvas.getBoundingClientRect().width;
-            this.height = this.canvas.getBoundingClientRect().height;
-            this.ox = this.width * 0.4; // Fixed eye offset
-            this.oy = this.height / 2;
-            this.draw();
-        });
-    }
-
-    draw() {
-        super.calculate();
-        const ctx = this.ctx;
-        const w = this.width;
-        const h = this.height;
-        ctx.clearRect(0,0,w,h);
-        ctx.save();
-        ctx.translate(this.ox, this.oy);
-
-        // Retina
-        ctx.strokeStyle = '#d32f2f'; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.moveTo(this.retinaX, -100); ctx.lineTo(this.retinaX, 100); ctx.stroke();
-        ctx.fillStyle = '#d32f2f'; ctx.fillText("Retina", this.retinaX - 20, -110);
-
-        // Lens Shape
-        const thickness = (150 - this.f) / 3; 
-        ctx.beginPath(); ctx.fillStyle = '#e3f2fd'; ctx.strokeStyle = '#1565c0'; ctx.lineWidth = 2;
-        ctx.ellipse(0, 0, thickness, 80, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-
-        this.drawArrow(ctx, this.u, -this.h_o, '#2e7d32', 'Object');
-
-        // Rays
-        const vX = this.v;
-        const vY = -this.h_i;
-        ctx.strokeStyle = '#f57f17';
-        
-        ctx.beginPath(); ctx.moveTo(this.u, -this.h_o); ctx.lineTo(0, -this.h_o); ctx.lineTo(vX, vY); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(this.u, -this.h_o); ctx.lineTo(vX, vY); ctx.stroke();
-
-        if (vX > 0 && vX < 600) this.drawArrow(ctx, vX, vY, 'rgba(0,0,0,0.3)', 'I');
-        ctx.restore();
-
-        // Focus Check
-        const status = document.getElementById('eye-status');
-        const diff = Math.abs(this.v - this.retinaX);
-        if(diff < 5) { status.textContent = "Status: PERFECT FOCUS"; status.style.color = "#2e7d32"; } 
-        else if (diff < 20) { status.textContent = "Status: Acceptable"; status.style.color = "#f9a825"; } 
-        else { status.textContent = "Status: BLURRED"; status.style.color = "#c62828"; }
-    }
-}
-
-/**
- * TELESCOPE SYSTEM
- */
-class TelescopeSystem {
+class FocusSystem {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = setupCanvas(this.canvas);
-        
-        this.fo = 200; // Objective focal length
-        this.fe = 50;  // Eyepiece focal length
-        
-        // Setup
-        this.width = this.canvas.getBoundingClientRect().width;
-        this.height = this.canvas.getBoundingClientRect().height;
-        this.oy = this.height / 2;
-        this.ox = 50; 
-        
-        this.attachResizeListener();
+        this.f = 50; 
+        this.u = 800;
+        this.v_lens = 60; 
+        window.addEventListener('resize', () => { this.ctx = setupCanvas(this.canvas); this.draw(); });
     }
-    
-    attachResizeListener() {
-        window.addEventListener('resize', () => {
-            this.ctx = setupCanvas(this.canvas);
-            this.width = this.canvas.getBoundingClientRect().width;
-            this.height = this.canvas.getBoundingClientRect().height;
-            this.oy = this.height / 2;
-            this.draw();
-        });
-    }
-    
     draw() {
-        const ctx = this.ctx;
-        const w = this.width;
-        const h = this.height;
+        const ctx = this.ctx; const w = this.canvas.getBoundingClientRect().width; const h = this.canvas.getBoundingClientRect().height;
         ctx.clearRect(0,0,w,h);
-        ctx.save();
-        ctx.translate(0, this.oy);
-        
-        // Draw Optical Axis
-        ctx.strokeStyle = '#cfd8dc';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.stroke();
-        
-        // 1. OBJECTIVE LENS
-        const lens1_x = 100;
-        this.drawLens(ctx, lens1_x, 100, '#1565c0');
-        ctx.fillStyle = '#1565c0'; ctx.fillText("Objective", lens1_x - 20, -110);
-        
-        // 2. EYEPIECE LENS
-        const lens2_x = lens1_x + this.fo + this.fe;
-        this.drawLens(ctx, lens2_x, 60, '#2e7d32');
-        ctx.fillStyle = '#2e7d32'; ctx.fillText("Eyepiece", lens2_x - 20, -70);
-        
-        // RAYS
-        const alpha = 0.05; 
-        const rayY = 40;
-        
-        ctx.strokeStyle = '#ff6f00';
-        ctx.lineWidth = 1.5;
-        
-        // Top Ray
-        ctx.beginPath();
-        ctx.moveTo(0, rayY); 
-        ctx.lineTo(lens1_x, rayY); 
-        const focusX = lens1_x + this.fo;
-        const imageH = this.fo * Math.tan(alpha); 
-        ctx.lineTo(focusX, imageH); 
-        
-        const beta = Math.atan(imageH / this.fe);
-        ctx.lineTo(w, imageH - (w - focusX)*Math.tan(beta)); 
+        const filmX = w - 50; const axisY = h/2; const lensX = filmX - this.v_lens;
+
+        // Camera Body
+        ctx.fillStyle = '#eceff1'; ctx.fillRect(filmX - 160, axisY - 60, 170, 120);
+        ctx.fillStyle = '#37474f'; ctx.fillRect(filmX, axisY-60, 5, 120); // Sensor
+        ctx.fillText("Film/CCD", filmX-25, axisY-70);
+
+        // Movable Lens
+        ctx.beginPath(); ctx.ellipse(lensX, axisY, 6, 50, 0, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(33, 150, 243, 0.3)'; ctx.fill(); ctx.strokeStyle = '#1565c0'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#0d47a1'; ctx.fillText("Lens", lensX-15, axisY-60);
+
+        // Rays (Calculation: 1/v_ideal = 1/f - 1/u)
+        const v_ideal = 1 / ( (1/this.f) - (1/this.u) );
+        const focusPointX = lensX + v_ideal; 
+
+        const rayH = 40;
+        const slope = rayH / v_ideal;
+
+        // Draw Rays converging to focusPointX
+        ctx.strokeStyle = '#ff6f00'; ctx.lineWidth = 1.5; ctx.beginPath();
+        // Top ray
+        ctx.moveTo(lensX-50, axisY - rayH - (50*(rayH/this.u))); 
+        ctx.lineTo(lensX, axisY - rayH);
+        ctx.lineTo(filmX, axisY - rayH + (slope * (filmX - lensX))); 
+        // Bottom ray
+        ctx.moveTo(lensX-50, axisY + rayH + (50*(rayH/this.u)));
+        ctx.lineTo(lensX, axisY + rayH);
+        ctx.lineTo(filmX, axisY + rayH - (slope * (filmX - lensX)));
         ctx.stroke();
+
+        // Check Focus
+        const diff = Math.abs(this.v_lens - v_ideal);
+        const status = document.getElementById('fc-status');
+        if(diff < 2) { 
+            status.textContent = "Status: IN FOCUS"; status.style.color = "#2e7d32"; 
+            ctx.strokeStyle = '#00c853'; ctx.lineWidth=4; ctx.strokeRect(filmX-2, axisY-60, 9, 120);
+        } else {
+            status.textContent = "Status: OUT OF FOCUS"; status.style.color = "#c62828";
+        }
         
-        // Bottom Ray
-        ctx.beginPath();
-        ctx.moveTo(0, -rayY);
-        ctx.lineTo(lens1_x, -rayY);
-        ctx.lineTo(focusX, imageH); 
-        ctx.lineTo(w, imageH - (w - focusX)*Math.tan(beta));
-        ctx.stroke();
-        
-        // Intermediate Image
-        this.drawArrow(ctx, focusX, imageH, '#c62828');
-        
-        ctx.restore();
-    }
-    
-    drawLens(ctx, x, h, color) {
-        ctx.beginPath();
-        ctx.ellipse(x, 0, 6, h, 0, 0, Math.PI*2);
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.3;
-        ctx.fill();
-        ctx.globalAlpha = 1.0;
-        ctx.strokeStyle = color;
-        ctx.stroke();
-    }
-    
-    drawArrow(ctx, x, h, color) {
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.moveTo(x, 0); ctx.lineTo(x, h);
-        ctx.stroke();
-        // Head
-        ctx.beginPath();
-        ctx.moveTo(x, h); ctx.lineTo(x-3, h-3); ctx.lineTo(x+3, h-3);
-        ctx.fillStyle = color; ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(focusPointX, axisY, 3, 0, Math.PI*2); ctx.fill();
+        ctx.fillText("Image Plane", focusPointX-30, axisY+10);
     }
 }
 
+/**
+ * 4. NEW: HORSE STATUE / ANGLE OF VIEW (REALISTIC)
+ */
+class HorseSystem {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = setupCanvas(this.canvas);
+        this.f = 50; 
+        window.addEventListener('resize', () => { this.ctx = setupCanvas(this.canvas); this.draw(); });
+    }
+    draw() {
+        const ctx = this.ctx; const w = this.canvas.getBoundingClientRect().width; const h = this.canvas.getBoundingClientRect().height;
+        ctx.clearRect(0,0,w,h);
+
+        // 1. Photo Frame View
+        const frameW = w * 0.7; const frameH = h * 0.7;
+        const frameX = (w - frameW)/2; const frameY = 30;
+        const zoom = this.f / 50; 
+
+        ctx.save();
+        ctx.beginPath(); ctx.rect(frameX, frameY, frameW, frameH); ctx.clip();
+
+        // Background
+        ctx.fillStyle = '#e1f5fe'; ctx.fillRect(frameX, frameY, frameW, frameH);
+        ctx.fillStyle = '#66bb6a'; ctx.fillRect(frameX, frameY + frameH*0.6, frameW, frameH*0.4);
+
+        // Draw Statue
+        ctx.translate(w/2, frameY + frameH*0.7); 
+        ctx.scale(zoom, zoom); 
+        this.drawEquestrianStatue(ctx);
+
+        ctx.restore();
+
+        // Border
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 8; ctx.strokeRect(frameX, frameY, frameW, frameH);
+
+        // 2. Diagram (Angle of View)
+        const diagSize = 100; const dx = 20; const dy = h - diagSize - 20;
+        const angleRad = 2 * Math.atan(18/this.f); 
+        const angleDeg = (angleRad * 180 / Math.PI).toFixed(1);
+
+        ctx.fillStyle = '#fff'; ctx.fillRect(dx, dy, diagSize, diagSize);
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(dx, dy, diagSize, diagSize);
+        
+        ctx.save(); ctx.translate(dx + diagSize/2, dy + diagSize - 10);
+        ctx.beginPath(); ctx.moveTo(0,0); 
+        const spread = 80 * Math.tan(angleRad/2);
+        ctx.lineTo(-spread, -80); ctx.lineTo(spread, -80); ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 111, 0, 0.4)'; ctx.fill();
+        ctx.strokeStyle = '#e65100'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-spread, -80); ctx.moveTo(0,0); ctx.lineTo(spread, -80); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0,0,30, -Math.PI/2 - angleRad/2, -Math.PI/2 + angleRad/2); ctx.stroke();
+        ctx.restore();
+
+        document.getElementById('horse-angle').textContent = `Angle: ${angleDeg}°`;
+    }
+
+    drawEquestrianStatue(ctx) {
+        // Pedestal
+        ctx.fillStyle = '#757575'; ctx.fillRect(-40, 0, 80, 20); ctx.fillRect(-30, -50, 60, 50);
+        
+        // --- Horse (Dark Brown) ---
+        ctx.fillStyle = '#4e342e';
+        ctx.beginPath();
+        
+        // Rear legs
+        ctx.moveTo(-15, -50); ctx.lineTo(-20, -10); ctx.lineTo(-10, -10); ctx.lineTo(-5, -50);
+        
+        // Body (Organic curves)
+        ctx.moveTo(-10, -50); 
+        ctx.bezierCurveTo(-30, -50, -35, -80, -30, -90); // Rump
+        ctx.bezierCurveTo(-20, -100, 20, -100, 30, -90); // Back
+        ctx.bezierCurveTo(35, -80, 25, -60, 15, -60); // Chest bottom
+        ctx.lineTo(-10, -50);
+        
+        // Front leg (Raised)
+        ctx.moveTo(15, -60); 
+        ctx.quadraticCurveTo(35, -60, 40, -80); // Upper leg
+        ctx.lineTo(45, -75); // Hoof
+        
+        // Neck & Head
+        ctx.moveTo(30, -90);
+        ctx.quadraticCurveTo(35, -120, 30, -130); // Neck front
+        ctx.lineTo(45, -125); // Nose
+        ctx.lineTo(40, -110); // Chin
+        ctx.quadraticCurveTo(20, -110, 30, -90); // Neck back
+        
+        ctx.fill();
+
+        // --- Rider (Dark Blue/Grey) ---
+        ctx.beginPath();
+        ctx.fillStyle = '#263238'; // Contrast color for rider
+        
+        // Leg
+        ctx.moveTo(0, -70); ctx.lineTo(5, -90); ctx.lineTo(-5, -90); ctx.fill();
+        
+        // Body
+        ctx.beginPath();
+        ctx.moveTo(0, -90); ctx.lineTo(0, -130); ctx.lineTo(15, -130); ctx.lineTo(10, -90); 
+        ctx.fill();
+        
+        // Head
+        ctx.beginPath();
+        ctx.arc(5, -135, 6, 0, Math.PI*2); 
+        ctx.fill();
+        
+        // Hat (Tricorn style)
+        ctx.beginPath();
+        ctx.moveTo(-5, -138); ctx.lineTo(15, -138); ctx.lineTo(5, -145); ctx.fill();
+        
+        // Sword/Arm detail
+        ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(5, -110); ctx.lineTo(20, -100); ctx.stroke();
+    }
+}
+
+/**
+ * 5. NEW: APERTURE SYSTEM
+ */
+class ApertureSystem {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = setupCanvas(this.canvas);
+        this.D = 17;
+        window.addEventListener('resize', () => { this.ctx = setupCanvas(this.canvas); this.draw(); });
+    }
+    draw() {
+        const ctx = this.ctx; const w = this.canvas.getBoundingClientRect().width; const h = this.canvas.getBoundingClientRect().height;
+        ctx.clearRect(0,0,w,h); const cx = w/2; const cy = h/2;
+
+        ctx.fillStyle = '#212121'; ctx.beginPath(); ctx.arc(cx, cy, 120, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#424242'; ctx.lineWidth=5; ctx.stroke();
+
+        const r = this.D * 4; 
+        ctx.fillStyle = '#eeeeee'; ctx.beginPath(); ctx.arc(cx, cy, 110, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#101010'; ctx.beginPath(); ctx.rect(0,0,w,h); ctx.arc(cx, cy, r, 0, Math.PI*2, true); ctx.fill();
+
+        const f = 50; const fStop = f/this.D;
+        const bright = Math.pow(this.D/25, 2) * 100;
+        document.getElementById('ap-res').textContent = `f/${fStop.toFixed(1)}`;
+        document.getElementById('ap-exp').textContent = `Brightness: ${bright.toFixed(0)}%`;
+    }
+}
+
+/**
+ * 6. NEW: ZOOM LENS SCHEMATIC
+ */
+class ZoomSystem {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = setupCanvas(this.canvas);
+        this.z = 0;
+        window.addEventListener('resize', () => { this.ctx = setupCanvas(this.canvas); this.draw(); });
+    }
+    draw() {
+        const ctx = this.ctx; const w = this.canvas.getBoundingClientRect().width; const h = this.canvas.getBoundingClientRect().height;
+        ctx.clearRect(0,0,w,h); const cy = h/2;
+        const t = this.z / 100;
+        const g1x = 50 + t*20; const g2x = g1x + 40 + t*60; const filmX = w - 30;
+
+        ctx.strokeStyle = '#ccc'; ctx.setLineDash([5,5]); ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke(); ctx.setLineDash([]);
+        this.drawLens(ctx, g1x, 60, '#1565c0', 'G1');
+        this.drawLens(ctx, g2x, 50, '#c62828', 'G2');
+        this.drawLens(ctx, filmX - 60, 40, '#2e7d32', 'G3');
+        ctx.fillStyle = '#333'; ctx.fillRect(filmX, cy-40, 5, 80);
+        ctx.strokeStyle = '#ff8f00'; ctx.lineWidth=2;
+        ctx.beginPath();
+        ctx.moveTo(0, cy-30); ctx.lineTo(g1x, cy-30); ctx.lineTo(g2x, cy-10 + (t*10)); ctx.lineTo(filmX-60, cy-10); ctx.lineTo(filmX, cy);
+        ctx.moveTo(0, cy+30); ctx.lineTo(g1x, cy+30); ctx.lineTo(g2x, cy+10 - (t*10)); ctx.lineTo(filmX-60, cy+10); ctx.lineTo(filmX, cy);
+        ctx.stroke();
+    }
+    drawLens(ctx, x, h, c, label) {
+        ctx.fillStyle=c; ctx.globalAlpha=0.3; ctx.beginPath(); ctx.ellipse(x, this.ctx.canvas.height/2, 5, h, 0, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha=1.0; ctx.strokeStyle=c; ctx.stroke(); ctx.fillText(label, x-10, this.ctx.canvas.height/2 - h - 10);
+    }
+}
+
+/**
+ * 7. PRESERVED SYSTEMS (Prism, Wave, Graph, Eye, Telescope)
+ */
+class PrismSystem {
+    constructor(canvasId) { this.canvas = document.getElementById(canvasId); this.ctx = setupCanvas(this.canvas); this.angle=30; this.n=1.5; window.addEventListener('resize', ()=>{this.ctx=setupCanvas(this.canvas);this.draw()}); }
+    draw() { const ctx=this.ctx;const w=this.canvas.getBoundingClientRect().width;const h=this.canvas.getBoundingClientRect().height; ctx.clearRect(0,0,w,h); ctx.save(); ctx.translate(w/2,h/2); const s=150; const hp=s*Math.sqrt(3)/2; ctx.fillStyle='rgba(255,255,255,0.1)'; ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.moveTo(0,-hp/2); ctx.lineTo(-s/2,hp/2); ctx.lineTo(s/2,hp/2); ctx.closePath(); ctx.fill(); ctx.stroke(); const r=this.angle*Math.PI/180; const sx=-s/4-200*Math.cos(r); const sy=-200*Math.sin(r); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(-s/4,0); ctx.stroke(); const cols=['#f00','#ff0','#0f0','#00f']; cols.forEach((c,i)=>{const ni=this.n+(i-1)*0.02; const ex=-s/4+80; const ey=(ni-1)*20; ctx.strokeStyle=c; ctx.lineWidth=2; ctx.globalAlpha=0.7; ctx.beginPath(); ctx.moveTo(-s/4,0); ctx.lineTo(ex,ey); ctx.lineTo(ex+200,ey+200*Math.tan((ni-1)*0.5)); ctx.stroke();}); ctx.restore(); }
+}
+class WaveSystem {
+    constructor(canvasId) { this.canvas=document.getElementById(canvasId); this.ctx=setupCanvas(this.canvas); this.d=10; this.l=550; window.addEventListener('resize', ()=>{this.ctx=setupCanvas(this.canvas);this.draw()}); }
+    draw() { 
+        const ctx=this.ctx; const w=this.canvas.getBoundingClientRect().width; const h=this.canvas.getBoundingClientRect().height; ctx.clearRect(0,0,w,h); const cx=w*0.2; const cy=h/2; const sx=w*0.9; 
+        ctx.strokeStyle='#555'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,cy-this.d*2); ctx.moveTo(cx,cy-this.d+2); ctx.lineTo(cx,cy+this.d-2); ctx.moveTo(cx,cy+this.d*2); ctx.lineTo(cx,h); ctx.stroke(); 
+        ctx.strokeStyle='#888'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sx,20); ctx.lineTo(sx,h-20); ctx.stroke(); 
+        const c=this.l<500?'#4fc3f7':(this.l<600?'#66bb6a':'#ef5350'); ctx.strokeStyle=c; ctx.lineWidth=2; ctx.beginPath(); for(let y=0;y<h;y+=2){ const dy=y-cy; const i=Math.pow(Math.cos(dy*this.d*0.005),2); ctx.lineTo(sx-i*40,y); ctx.fillStyle=c; ctx.globalAlpha=i; ctx.fillRect(sx-2,y,4,2); } ctx.stroke(); 
+        // RESTORED RAYS
+        ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1; const slit1Y=cy-this.d; const slit2Y=cy+this.d; for(let ty=0;ty<h;ty+=40){ ctx.beginPath(); ctx.moveTo(cx,slit1Y); ctx.lineTo(sx,ty); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx,slit2Y); ctx.lineTo(sx,ty); ctx.stroke(); }
+    }
+}
+class GraphSystem { constructor(){this.canvas=document.getElementById('graph-canvas');this.ctx=setupCanvas(this.canvas);} draw(u,v,f){if(!isFinite(v))return;const ctx=this.ctx;const w=this.canvas.getBoundingClientRect().width;const h=this.canvas.getBoundingClientRect().height;ctx.clearRect(0,0,w,h);const sc=3000;const ox=w/2;const oy=h/2;ctx.strokeStyle='#aaa';ctx.beginPath();ctx.moveTo(0,oy);ctx.lineTo(w,oy);ctx.moveTo(ox,0);ctx.lineTo(ox,h);ctx.stroke();const iF=1/f;ctx.strokeStyle='#2196f3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ox+(0-ox), oy-(-(0-ox)/sc+iF)*sc);ctx.lineTo(ox+(w-ox), oy-(-(w-ox)/sc+iF)*sc);ctx.stroke();const cx=1/u;const cy=1/v;ctx.fillStyle='#ff6f00';ctx.beginPath();ctx.arc(ox+cx*sc,oy-cy*sc,6,0,Math.PI*2);ctx.fill();} }
+class EyeSystem extends OpticsSystem {
+    constructor(canvasId){super(canvasId,'lens');this.retinaX=180;this.u=-300;this.f=90;this.ox=this.width*0.4;}
+    attachResizeListener(){window.addEventListener('resize',()=>{this.ctx=setupCanvas(this.canvas);this.updateDims();this.ox=this.width*0.4;this.draw()});}
+    draw(){super.calculate();const ctx=this.ctx;const w=this.width;const h=this.height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(this.ox,this.oy);ctx.strokeStyle='#d32f2f';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(this.retinaX,-100);ctx.lineTo(this.retinaX,100);ctx.stroke();ctx.fillText("Retina",this.retinaX-20,-110);const th=(150-this.f)/3;ctx.beginPath();ctx.fillStyle='#e3f2fd';ctx.strokeStyle='#1565c0';ctx.lineWidth=2;ctx.ellipse(0,0,th,80,0,0,Math.PI*2);ctx.fill();ctx.stroke();this.drawArrow(ctx,this.u,-this.h_o,'#2e7d32','Object');const vx=this.v;const vy=-this.h_i;ctx.strokeStyle='#f57f17';ctx.beginPath();ctx.moveTo(this.u,-this.h_o);ctx.lineTo(0,-this.h_o);ctx.lineTo(vx,vy);ctx.stroke();ctx.beginPath();ctx.moveTo(this.u,-this.h_o);ctx.lineTo(vx,vy);ctx.stroke();ctx.restore();const stat=document.getElementById('eye-status');const d=Math.abs(this.v-this.retinaX);stat.textContent=d<5?"Status: FOCUSED":"Status: BLURRED";stat.style.color=d<5?"#2e7d32":"#c62828";}
+}
+class TelescopeSystem {
+    constructor(id){this.canvas=document.getElementById(id);this.ctx=setupCanvas(this.canvas);this.fo=200;this.fe=50;this.width=this.canvas.getBoundingClientRect().width;this.height=this.canvas.getBoundingClientRect().height;this.oy=this.height/2;window.addEventListener('resize',()=>{this.ctx=setupCanvas(this.canvas);this.draw()});}
+    draw(){const ctx=this.ctx;const w=this.canvas.getBoundingClientRect().width;const h=this.canvas.getBoundingClientRect().height;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(50,h/2);ctx.strokeStyle='#cfd8dc';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(w,0);ctx.stroke();this.dl(ctx,100,100,'#1565c0');this.dl(ctx,100+this.fo+this.fe,60,'#2e7d32');const fx=100+this.fo;const ih=this.fo*0.05;ctx.strokeStyle='#ff6f00';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,20);ctx.lineTo(100,20);ctx.lineTo(fx,ih);ctx.lineTo(w,ih*3);ctx.stroke();ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(100,-20);ctx.lineTo(fx,ih);ctx.lineTo(w,ih*3);ctx.stroke();this.da(ctx,fx,ih,'#c62828');ctx.restore();document.getElementById('t-calc-res').textContent=`Mag: ${(this.fo/this.fe).toFixed(1)}x`;}
+    dl(ctx,x,h,c){ctx.fillStyle=c;ctx.globalAlpha=0.3;ctx.beginPath();ctx.ellipse(x,0,6,h,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=c;ctx.stroke();}
+    da(ctx,x,h,c){ctx.strokeStyle=c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+}
 
 // --- INITIALIZATION ---
 const graph = new GraphSystem();
-
-// Pinhole (Abstract)
 const pinholeLab = new OpticsSystem('pinhole-canvas', 'pinhole');
-const p_u = document.getElementById('p-u-input');
-const p_v = document.getElementById('p-v-input');
+const p_u = document.getElementById('p-u-input'); const p_v = document.getElementById('p-v-input');
+function updatePinhole() { pinholeLab.u=parseFloat(p_u.value); pinholeLab.v=parseFloat(p_v.value); pinholeLab.calculate(); pinholeLab.draw(); document.getElementById('p-u-val').textContent=pinholeLab.u; document.getElementById('p-v-val').textContent=pinholeLab.v; document.getElementById('p-calc-res').innerHTML=`Magnification = ${Math.abs(pinholeLab.m).toFixed(2)}x`; }
+p_u.addEventListener('input', updatePinhole); p_v.addEventListener('input', updatePinhole); updatePinhole();
 
-function updatePinhole() {
-    pinholeLab.u = parseFloat(p_u.value);
-    pinholeLab.v = parseFloat(p_v.value);
-    pinholeLab.calculate();
-    pinholeLab.draw();
-    document.getElementById('p-u-val').textContent = pinholeLab.u;
-    document.getElementById('p-v-val').textContent = pinholeLab.v;
-    document.getElementById('p-calc-res').innerHTML = `Magnification = ${Math.abs(pinholeLab.m).toFixed(2)}x<br>Img Height = ${pinholeLab.h_i.toFixed(1)}`;
-}
-p_u.addEventListener('input', updatePinhole);
-p_v.addEventListener('input', updatePinhole);
-updatePinhole();
-
-// Camera Obscura (Ashoka Tree)
 const obscuraLab = new CameraObscuraSystem('obscura-canvas');
-const o_d1 = document.getElementById('o-d1-input');
-const o_d2 = document.getElementById('o-d2-input');
-function updateObscura() {
-    obscuraLab.d1 = parseFloat(o_d1.value);
-    obscuraLab.d2 = parseFloat(o_d2.value);
-    obscuraLab.draw();
-    document.getElementById('o-d1-val').textContent = obscuraLab.d1;
-    document.getElementById('o-d2-val').textContent = obscuraLab.d2;
-    const m = obscuraLab.d2 / obscuraLab.d1;
-    document.getElementById('o-calc-res').innerHTML = `Scale: ${m.toFixed(2)}x`;
-}
-o_d1.addEventListener('input', updateObscura);
-o_d2.addEventListener('input', updateObscura);
-updateObscura();
+const o_d1 = document.getElementById('o-d1-input'); const o_d2 = document.getElementById('o-d2-input');
+function updateObscura() { obscuraLab.d1=parseFloat(o_d1.value); obscuraLab.d2=parseFloat(o_d2.value); obscuraLab.draw(); document.getElementById('o-d1-val').textContent=obscuraLab.d1; document.getElementById('o-d2-val').textContent=obscuraLab.d2; document.getElementById('o-calc-res').innerHTML=`Scale: ${(obscuraLab.d2/obscuraLab.d1).toFixed(2)}x`; }
+o_d1.addEventListener('input', updateObscura); o_d2.addEventListener('input', updateObscura); updateObscura();
 
-// Mirror
 const mirrorLab = new OpticsSystem('mirror-canvas', 'mirror');
-const m_u = document.getElementById('m-u-input');
-const m_f = document.getElementById('m-f-input');
-function updateMirror() {
-    mirrorLab.u = parseFloat(m_u.value);
-    mirrorLab.f = parseFloat(m_f.value);
-    mirrorLab.calculate();
-    mirrorLab.draw();
-    document.getElementById('m-u-val').textContent = mirrorLab.u;
-    document.getElementById('m-f-val').textContent = mirrorLab.f;
-    document.getElementById('m-calc-res').innerHTML = `v = ${Math.round(mirrorLab.v)}<br>m = ${mirrorLab.m.toFixed(2)}`;
-    document.getElementById('m-calc-props').innerHTML = `${mirrorLab.v < 0 ? 'Real' : 'Virtual'}, ${Math.abs(mirrorLab.m)>1?'Magnified':'Diminished'}`;
-    graph.draw(mirrorLab.u, mirrorLab.v, mirrorLab.f);
-}
-m_u.addEventListener('input', updateMirror);
-m_f.addEventListener('input', updateMirror);
-updateMirror();
+const m_u = document.getElementById('m-u-input'); const m_f = document.getElementById('m-f-input');
+function updateMirror() { mirrorLab.u=parseFloat(m_u.value); mirrorLab.f=parseFloat(m_f.value); mirrorLab.calculate(); mirrorLab.draw(); document.getElementById('m-u-val').textContent=mirrorLab.u; document.getElementById('m-f-val').textContent=mirrorLab.f; document.getElementById('m-calc-res').innerHTML=`v = ${Math.round(mirrorLab.v)}`; document.getElementById('m-calc-props').innerHTML=`${mirrorLab.v<0?'Real':'Virtual'}`; graph.draw(mirrorLab.u, mirrorLab.v, mirrorLab.f); }
+m_u.addEventListener('input', updateMirror); m_f.addEventListener('input', updateMirror); updateMirror();
 
-// Lens
+const prismLab = new PrismSystem('prism-canvas');
+document.getElementById('prism-angle-input').oninput=function(){prismLab.angle=parseFloat(this.value);prismLab.draw();document.getElementById('prism-angle-val').textContent=this.value;}; document.getElementById('prism-n-input').oninput=function(){prismLab.n=parseFloat(this.value);prismLab.draw();document.getElementById('prism-n-val').textContent=this.value;}; prismLab.draw();
+
 const lensLab = new OpticsSystem('lens-canvas', 'lens');
-const l_u = document.getElementById('l-u-input');
-const l_f = document.getElementById('l-f-input');
-function updateLens() {
-    lensLab.u = parseFloat(l_u.value);
-    lensLab.f = parseFloat(l_f.value);
-    lensLab.calculate();
-    lensLab.draw();
-    document.getElementById('l-u-val').textContent = lensLab.u;
-    document.getElementById('l-f-val').textContent = lensLab.f;
-    document.getElementById('l-calc-res').innerHTML = `v = ${Math.round(lensLab.v)}<br>m = ${lensLab.m.toFixed(2)}`;
-    document.getElementById('l-calc-props').innerHTML = `${lensLab.v > 0 ? 'Real' : 'Virtual'}, ${lensLab.m < 0 ? 'Inverted' : 'Erect'}`;
-}
-l_u.addEventListener('input', updateLens);
-l_f.addEventListener('input', updateLens);
-updateLens();
+const l_u = document.getElementById('l-u-input'); const l_f = document.getElementById('l-f-input');
+function updateLens() { lensLab.u=parseFloat(l_u.value); lensLab.f=parseFloat(l_f.value); lensLab.calculate(); lensLab.draw(); document.getElementById('l-u-val').textContent=lensLab.u; document.getElementById('l-f-val').textContent=lensLab.f; document.getElementById('l-calc-res').innerHTML=`v = ${Math.round(lensLab.v)}`; document.getElementById('l-calc-props').innerHTML=`${lensLab.v>0?'Real':'Virtual'}`; }
+l_u.addEventListener('input', updateLens); l_f.addEventListener('input', updateLens); updateLens();
 
-// Eye
+// --- NEW INTEGRATIONS ---
+const focusLab = new FocusSystem('focus-canvas');
+document.getElementById('fc-u-input').oninput=function(){focusLab.u=parseFloat(this.value);focusLab.draw();document.getElementById('fc-u-val').textContent=this.value;};
+document.getElementById('fc-v-input').oninput=function(){focusLab.v_lens=parseFloat(this.value);focusLab.draw();document.getElementById('fc-v-val').textContent=this.value;};
+focusLab.draw();
+
+const horseLab = new HorseSystem('horse-canvas');
+document.getElementById('horse-f-input').oninput=function(){horseLab.f=parseFloat(this.value);horseLab.draw();document.getElementById('horse-f-val').textContent=this.value;};
+horseLab.draw();
+
+const apLab = new ApertureSystem('aperture-canvas');
+document.getElementById('ap-d-input').oninput=function(){apLab.D=parseFloat(this.value);apLab.draw();document.getElementById('ap-d-val').textContent=this.value;};
+apLab.draw();
+
+const zoomLab = new ZoomSystem('zoom-canvas');
+document.getElementById('z-input').oninput=function(){zoomLab.z=parseFloat(this.value);zoomLab.draw();document.getElementById('z-val').textContent=this.value<50?"Wide":"Tele";};
+zoomLab.draw();
+
 const eyeLab = new EyeSystem('eye-canvas');
-const e_u = document.getElementById('eye-u-input');
-const e_f = document.getElementById('eye-f-input');
-function updateEye() {
-    eyeLab.u = parseFloat(e_u.value);
-    eyeLab.f = parseFloat(e_f.value);
-    document.getElementById('eye-f-val').textContent = eyeLab.f;
-    eyeLab.draw();
-}
-e_u.addEventListener('input', updateEye);
-e_f.addEventListener('input', updateEye);
-updateEye();
+document.getElementById('eye-u-input').oninput=function(){eyeLab.u=parseFloat(this.value);eyeLab.draw();}; document.getElementById('eye-f-input').oninput=function(){eyeLab.f=parseFloat(this.value);document.getElementById('eye-f-val').textContent=this.value;eyeLab.draw();}; eyeLab.draw();
 
-// Telescope
 const teleLab = new TelescopeSystem('telescope-canvas');
-const t_fo = document.getElementById('t-fo-input');
-const t_fe = document.getElementById('t-fe-input');
-function updateTelescope() {
-    teleLab.fo = parseFloat(t_fo.value);
-    teleLab.fe = parseFloat(t_fe.value);
-    teleLab.draw();
-    document.getElementById('t-fo-val').textContent = teleLab.fo;
-    document.getElementById('t-fe-val').textContent = teleLab.fe;
-    const mag = teleLab.fo / teleLab.fe;
-    document.getElementById('t-calc-res').innerHTML = `Angular Magnification M = ${mag.toFixed(1)}x`;
-}
-t_fo.addEventListener('input', updateTelescope);
-t_fe.addEventListener('input', updateTelescope);
-updateTelescope();
+document.getElementById('t-fo-input').oninput=function(){teleLab.fo=parseFloat(this.value);teleLab.draw();document.getElementById('t-fo-val').textContent=this.value;}; document.getElementById('t-fe-input').oninput=function(){teleLab.fe=parseFloat(this.value);teleLab.draw();document.getElementById('t-fe-val').textContent=this.value;}; teleLab.draw();
+
+const waveLab = new WaveSystem('wave-canvas');
+document.getElementById('w-d-input').oninput=function(){waveLab.d=parseFloat(this.value);waveLab.draw();}; document.getElementById('w-l-input').oninput=function(){waveLab.l=parseFloat(this.value);waveLab.draw();document.getElementById('w-color-name').textContent=this.value<500?"Blue":"Red";}; waveLab.draw();
 
 </script>
 </body>
