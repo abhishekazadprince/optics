@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Story of Optics — Geometry, Light, and Scale</title>
     
-    <!-- 1. FIXED MATHJAX CONFIGURATION -->
+    <!-- MathJax for rendering equations -->
     <script>
     window.MathJax = {
       tex: {
@@ -40,7 +40,6 @@
             line-height: 1.8;
         }
 
-        /* Typography */
         h1, h2, h3, h4 {
             font-family: 'Segoe UI', 'Roboto', sans-serif;
             color: var(--primary);
@@ -65,7 +64,15 @@
             color: #0d47a1;
         }
 
-        /* Layout */
+        .advanced-read {
+            border-left: 4px solid #ff6f00;
+            background: #fff8e1;
+            padding: 25px;
+            margin: 25px 0;
+            font-size: 1.05rem;
+            border-radius: 0 4px 4px 0;
+        }
+
         .hero {
             background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
             color: white;
@@ -93,7 +100,6 @@
             border-top: 4px solid var(--primary);
         }
 
-        /* Interactive Lab Styles */
         .lab-wrapper {
             border: 1px solid #cfd8dc;
             background: #fff;
@@ -112,13 +118,14 @@
         }
 
         #pinhole-canvas { background: linear-gradient(90deg, #f5f5f5 50%, #263238 50%); }
+        #obscura-canvas { background: linear-gradient(90deg, #f1f8e9 50%, #263238 50%); }
 
         .controls-bar {
             background: var(--panel-bg);
             padding: 25px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
             border-top: 1px solid #b0bec5;
             font-family: 'Segoe UI', sans-serif;
             font-size: 0.95rem;
@@ -158,16 +165,7 @@
             border-top: 1px solid #37474f;
         }
 
-        /* Graph Canvas */
         #graph-canvas { height: 280px; background: #fff; border-top: 1px solid #eee; }
-
-        .advanced-read {
-            border-left: 4px solid #ff6f00;
-            background: #fff8e1;
-            padding: 20px;
-            margin: 20px 0;
-            font-size: 1.05rem;
-        }
 
         @media (max-width: 768px) {
             .hero h1 { font-size: 2.2rem; }
@@ -203,14 +201,14 @@
         </p>
     </section>
 
-    <!-- CHAPTER 0: PINHOLE -->
+    <!-- CHAPTER 1: PINHOLE (ABSTRACT) -->
     <section>
         <h2>Chapter 1: The Pinhole (Pure Geometry)</h2>
         <p class="narrative">
-            Before lenses and mirrors, there was the <em>Camera Obscura</em>. If you poke a tiny hole in the wall of a dark room, an inverted image of the outside world appears on the opposite wall.
+            Before we look at the complex world of lenses, let us look at the simplest optical instrument: the Pinhole.
         </p>
         <p class="narrative">
-            This is the purest form of optics. There is no glass, no refraction. Just straight lines crossing at a point. The image is nothing but a scaled version of the object.
+            Here, we represent the object as a simple Arrow. Notice the geometry. The light travels in straight lines through the hole, forming two triangles joined at the tip. The ratio of heights exactly equals the ratio of distances.
         </p>
 
         <div class="lab-wrapper">
@@ -234,20 +232,58 @@
         <p class="narrative">
             From this alone comes the magnification formula:
             $$ \frac{\text{image height}}{\text{object height}} = \frac{\text{image distance}}{\text{object distance}} $$
-            This is not a formula to be memorized; it is the statement that the shape of light is preserved while its size changes.
         </p>
     </section>
 
-    <!-- CHAPTER 1: REFLECTION -->
+    <!-- CHAPTER 2: CAMERA OBSCURA (REALISTIC RAY MODEL) -->
     <section>
-        <h2>Chapter 2: Reflection & The Geometric Proof</h2>
+        <h2>Chapter 2: The Camera Obscura</h2>
+        <div class="advanced-read">
+            <h3>Apertures & The World Upside Down</h3>
+            <p>
+                It has been known since ancient times that light passing through a small hole in an opaque barrier casts a dim but full-color image of the outside world onto a wall. This is the <strong>Camera Obscura</strong> (Latin for “dark room”).
+            </p>
+            <p>
+                But there is one problem with viewing the image: <strong>It’s upside down!</strong>
+            </p>
+            <p>
+                The simulation below shows a realistic <strong>Ashoka Tree</strong> (<i>Polyalthia longifolia</i>) outside a dark room.
+            </p>
+            <p>
+                <strong>Trace the Rays:</strong>
+                <ul>
+                    <li>The <strong style="color:#d32f2f;">RED Ray</strong> originates from the <strong>Top</strong> of the tree. Because light travels in a straight line, it must travel <em>downwards</em> to pass through the tiny hole. It hits the <strong>Bottom</strong> of the back wall.</li>
+                    <li>The <strong style="color:#1976d2;">BLUE Ray</strong> originates from the <strong>Bottom</strong> (roots) of the tree. It must travel <em>upwards</em> to pass through the hole. It hits the <strong>Top</strong> of the back wall.</li>
+                </ul>
+                The aperture acts as a pivot, crossing the rays and creating an <strong>Inverted Image</strong>.
+            </p>
+        </div>
+
+        <div class="lab-wrapper">
+            <canvas id="obscura-canvas"></canvas>
+            <div class="controls-bar">
+                <div class="slider-group">
+                    <label>Tree Distance ($d_o$): <span id="o-d1-val"></span></label>
+                    <input type="range" id="o-d1-input" min="50" max="250" value="120">
+                </div>
+                <div class="slider-group">
+                    <label>Room Depth ($d_i$): <span id="o-d2-val"></span></label>
+                    <input type="range" id="o-d2-input" min="50" max="300" value="150">
+                </div>
+            </div>
+            <div class="stats-panel">
+                <div id="o-calc-res"></div>
+                <div style="text-align: right; opacity: 0.7;">Visualization: Ashoka Tree</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHAPTER 3: REFLECTION -->
+    <section>
+        <h2>Chapter 3: Reflection & The Geometric Proof</h2>
         <p class="narrative">
             Pinholes are dim. To gather more light, we use mirrors. But even with curved surfaces, the geometry of similar triangles remains the law of the land.
         </p>
-        <p class="narrative">
-            Use the simulation below. Click <strong>"Show Triangles"</strong>. The mirror formula is simply what you get when two such similar-triangle relations are combined—one from the ray at the pole, one from the center of curvature.
-        </p>
-
         <div class="lab-wrapper">
             <canvas id="mirror-canvas"></canvas>
             
@@ -272,11 +308,18 @@
                 <div id="m-calc-props"></div>
             </div>
         </div>
+        
+        <div class="highlight-box">
+            <strong>The Logic:</strong><br>
+            1. From Pole Triangles: $\frac{h_i}{h_o} = \frac{v}{u}$<br>
+            2. From Center Triangles: $\frac{h_i}{h_o} = \frac{v - 2f}{2f - u}$<br>
+            Combining these leads inevitably to: $\frac{1}{v} + \frac{1}{u} = \frac{1}{f}$
+        </div>
     </section>
 
-    <!-- CHAPTER 2: LINEARITY -->
+    <!-- CHAPTER 4: LINEARITY -->
     <section>
-        <h2>Chapter 3: The Linearity of Light</h2>
+        <h2>Chapter 4: The Linearity of Light</h2>
         <p class="narrative">
             The algebra is nothing more than bookkeeping of how scale factors combine. If we plot the "Optical Power" of the image ($1/v$) against the object ($1/u$), we find a straight line.
         </p>
@@ -285,10 +328,9 @@
         </div>
     </section>
 
-    <!-- CHAPTER 3: THE REAL CAMERA (Detailed Story) -->
+    <!-- CHAPTER 5: THE REAL CAMERA (RESTORED TEXT) -->
     <section>
-        <h2>Chapter 4: The Real Camera</h2>
-        
+        <h2>Chapter 5: The Real Camera (Lens)</h2>
         <p class="narrative">
             We have seen the Pinhole (geometry) and the Simple Lens (focus). Now, let us look deeper into the physics of the camera itself.
         </p>
@@ -302,7 +344,7 @@
                 In dim light you need to open the aperture up to let a lot of light in; but this makes the image less sharp, and you have a smaller depth of field. The aperture of a lens is merely its diameter, and it is usually expressed as a fraction of the focal length. Thus an aperture of $f/22$ is a small aperture. You can use this only in strong light, but you will then have nice sharp images and a large depth of field. An aperture of $f/6.3$ is wide open; the cone of light inside the camera is quite steep, and focussing is then quite critical. You use such a wide aperture only if you are forced to by dim light.
             </p>
             <p>
-                The apertures typically available on a camera are often in steps with a ratio of approximately $\sqrt{2}$ from one to the next. As you increase the aperture by a factor of $\sqrt{2}$, you get twice as much light on the film (because this depends on the area of the exposed lens), so presumably you can cut the exposure time by one half. This is probably true for a CCD camera; the degree of blackening of a photographic film is not quite proportional to the product of the illuminance and the time, but at least it serves as a rough guide.
+                The apertures typically available on a camera are often in steps with a ratio of approximately $\sqrt{2}$ from one to the next. As you increase the aperture by a factor of $\sqrt{2}$, you get twice as much light on the film (because this depends on the area of the exposed lens), so presumably you can cut the exposure time by one half.
             </p>
 
             <h3>Depth of Focus: A Triangle Problem</h3>
@@ -331,7 +373,7 @@
                 We have essentially two sets of similar triangles to compare: one outside the camera (object space) and one inside (image space). Since $m = v/u$ (or $q/p$), a small shift in the image plane corresponds to a much larger shift in the object plane ($\Delta p \approx \Delta q / m^2$), meaning Depth of Field is typically much larger than Depth of Focus.
             </p>
         </div>
-        
+
         <div class="lab-wrapper">
             <canvas id="lens-canvas"></canvas>
             <div class="controls-bar">
@@ -352,16 +394,12 @@
         </div>
     </section>
 
-    <!-- CHAPTER 5: APPLICATIONS (EYE) -->
+    <!-- CHAPTER 6: APPLICATIONS (EYE) -->
     <section>
-        <h2>Chapter 5: Scaling Reality (The Eye)</h2>
+        <h2>Chapter 6: Scaling Reality (The Eye)</h2>
         <p class="narrative">
             In the human eye, the distance to the "screen" (retina) is fixed. To see objects at different distances, the eye must change its shape (Accommodation).
         </p>
-        <p class="narrative">
-            <strong>Interactive Challenge:</strong> An object is approaching. Adjust the <strong>Eye Power</strong> slider to maintain the geometry and keep the image focused on the retina.
-        </p>
-
         <div class="lab-wrapper">
             <canvas id="eye-canvas"></canvas>
             <div class="controls-bar">
@@ -380,25 +418,12 @@
         </div>
     </section>
 
-    <!-- 3. NEW CHAPTER: THE TELESCOPE -->
+    <!-- CHAPTER 7: TELESCOPE -->
     <section>
-        <h2>Chapter 6: The Telescope (Angular Geometry)</h2>
+        <h2>Chapter 7: The Telescope (Angular Geometry)</h2>
         <p class="narrative">
-            We have talked about linear magnification (making heights bigger). But when you look at the Moon, it is effectively at infinity. Its "height" is irrelevant; what matters is the <strong>angle</strong> it takes up in the sky.
+            A telescope works by <strong>Angular Magnification</strong>. It uses an Objective lens to create an image, and an Eyepiece to magnify it.
         </p>
-        <p class="narrative">
-            A telescope works by <strong>Angular Magnification</strong>. It uses two lenses:
-            <ol>
-                <li><strong>Objective:</strong> Collects light from a distant object and forms a tiny image at its focus ($f_o$).</li>
-                <li><strong>Eyepiece:</strong> Acts as a magnifying glass to look at that tiny image.</li>
-            </ol>
-        </p>
-        <p class="narrative">
-            If the focal lengths are $f_o$ and $f_e$, geometry tells us the angular magnification is:
-            $$ M = \frac{\beta}{\alpha} = \frac{f_o}{f_e} $$
-            Notice the ratio again! It's all about comparing two lengths to scale the angle.
-        </p>
-
         <div class="lab-wrapper">
             <canvas id="telescope-canvas"></canvas>
             <div class="controls-bar">
@@ -425,7 +450,16 @@
             We have seen that $m = v/u$ is not just a formula. It is the statement that the shape of light is preserved.
         </p>
         <p class="narrative">
-            The same idea appears in mechanics, waves, and quantum field theory. Physics is the art of turning that simple truth into instruments that see galaxies and atoms.
+            The same idea appears in mechanics. When a projectile is thrown, its path at different times is a scaled copy of its earlier path. If time is doubled, distance does not double but grows like $t^2$, which is again a statement about how shapes rescale.
+        </p>
+        <p class="narrative">
+            In waves, a small segment of a wave is similar to a large one. That is why a sinusoid keeps its form whether it is one meter long or a kilometer long. Fourier analysis is nothing but the study of how shapes reproduce themselves at different scales.
+        </p>
+        <p class="narrative">
+            Even in quantum mechanics, the Schrödinger equation preserves shape under scaling of length and energy; bound-state wavefunctions are families of similar curves differing only by scale parameters. Renormalization in field theory is nothing but the statement that physics should look the same when lengths are rescaled, just as a triangle keeps its shape when magnified.
+        </p>
+        <p class="narrative">
+            This is why Socrates could say that geometry is already known. A child knows that a shadow is the same object made larger. Physics is the art of turning that simple truth into instruments that see galaxies and atoms.
         </p>
     </section>
 
@@ -434,7 +468,7 @@
 <script>
 /**
  * 2. HD CANVAS SUPPORT
- * Utility to handle Retina/High-DPI displays for crisp rendering
+ * Utility to handle Retina/High-DPI displays for crisp rendering and fit.
  */
 function setupCanvas(canvas) {
     const dpr = window.devicePixelRatio || 1;
@@ -447,10 +481,6 @@ function setupCanvas(canvas) {
     // Normalize coordinate system to use css pixels
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-    
-    // Maintain visual size
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
     
     return ctx;
 }
@@ -485,7 +515,7 @@ class OpticsSystem {
         
         this.ox = this.width * 0.5;
         this.oy = this.height / 2;
-        if (type !== 'pinhole') this.ox = this.width * 0.6; // Shift origin
+        if (type !== 'pinhole') this.ox = this.width * 0.6; // Shift origin for lens/mirror
 
         this.attachResizeListener();
     }
@@ -496,7 +526,6 @@ class OpticsSystem {
             this.ctx = setupCanvas(this.canvas);
             this.width = this.canvas.getBoundingClientRect().width;
             this.height = this.canvas.getBoundingClientRect().height;
-            
             this.ox = this.type === 'pinhole' ? this.width * 0.5 : this.width * 0.6;
             this.oy = this.height / 2;
             this.draw();
@@ -578,10 +607,10 @@ class OpticsSystem {
         ctx.font = "12px sans-serif";
         ctx.fillText("Screen", this.v + 5, -140);
 
-        // Object
+        // Object (Abstract Arrow)
         this.drawArrow(ctx, this.u, -this.h_o, '#4caf50', 'Object'); 
 
-        // Image (Inverted)
+        // Image (Inverted Arrow)
         this.drawArrow(ctx, this.v, this.h_i, '#ffab91', 'Image');
 
         // Rays
@@ -663,7 +692,7 @@ class OpticsSystem {
         ctx.stroke();
         
         ctx.beginPath();
-        const dir = h < 0 ? -1 : 1;
+        const dir = h < 0 ? -1 : 1; // if h is neg (up), dir is -1
         ctx.moveTo(x, h);
         ctx.lineTo(x-5, h - dir*8);
         ctx.lineTo(x+5, h - dir*8);
@@ -739,6 +768,208 @@ class OpticsSystem {
             document.getElementById('btn-tri-center').classList.toggle('active');
         }
         this.draw();
+    }
+}
+
+/**
+ * NEW SYSTEM: REALISTIC CAMERA OBSCURA (ASHOKA TREE)
+ * Renders the Real Tree outside and the Inverted Tree inside.
+ */
+class CameraObscuraSystem {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = setupCanvas(this.canvas);
+        
+        this.d1 = 120; // Object Distance
+        this.d2 = 150; // Image Distance (Depth)
+        this.h_o = 60; // Tree Height
+        
+        this.attachResizeListener();
+    }
+    
+    attachResizeListener() {
+        window.addEventListener('resize', () => {
+            this.ctx = setupCanvas(this.canvas);
+            this.draw();
+        });
+    }
+    
+    draw() {
+        const ctx = this.ctx;
+        const w = this.canvas.getBoundingClientRect().width;
+        const h = this.canvas.getBoundingClientRect().height;
+        const split = w * 0.6; // Split screen for Side View vs Screen View
+        
+        ctx.clearRect(0,0,w,h);
+        
+        // --- LEFT SIDE: SIDE VIEW ---
+        ctx.save();
+        ctx.translate(50, h/2);
+        
+        // Coordinates: (0,0) is the Pinhole.
+        // X axis is the optical axis.
+        // Y axis vertical (Positive Down).
+        
+        // Draw Ground Line outside
+        // Tree base is at y = +40 (below axis). 
+        const groundY = 40;
+        
+        // 1. Draw Ashoka Tree (Object) at x = -d1
+        const treeX = -this.d1;
+        // Tree Top y = groundY - height.
+        const treeTopY = groundY - this.h_o;
+        
+        this.drawAshokaTree(ctx, treeX, groundY, this.h_o, false); // Upright
+        
+        // Draw Ground Line
+        ctx.strokeStyle = '#795548';
+        ctx.beginPath(); ctx.moveTo(treeX - 20, groundY); ctx.lineTo(0, groundY); ctx.stroke();
+        
+        // 2. Aperture Wall
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, -60, 4, 120); // Barrier at x=0
+        ctx.clearRect(0, -2, 4, 4); // Hole
+        
+        // 3. Dark Room Box
+        ctx.fillStyle = 'rgba(33, 33, 33, 0.1)';
+        ctx.fillRect(0, -70, this.d2, 140);
+        ctx.strokeStyle = '#424242';
+        ctx.strokeRect(0, -70, this.d2, 140);
+        
+        // 4. Screen at x = d2
+        const screenX = this.d2;
+        ctx.fillStyle = '#90a4ae';
+        ctx.fillRect(screenX, -70, 4, 140);
+        ctx.fillStyle = '#37474f';
+        ctx.fillText("Screen", screenX-20, -80);
+        
+        // 5. Inverted Image Geometry
+        // Magnification M = d2 / d1
+        const M = this.d2 / this.d1;
+        const imgH = this.h_o * M;
+        
+        // Ray Tracing Logic
+        // Top Ray: (-d1, treeTopY) -> (0,0) -> (d2, imgTopY)
+        // imgTopY = -treeTopY * (d2/d1) = -treeTopY * M
+        // treeTopY is neg (e.g. -20). So imgTopY is pos (e.g. +25). -> Projecting "Down".
+        const imgTopY = treeTopY * (-M); // y coordinate of tip
+        
+        // Base Ray: (-d1, groundY) -> (0,0) -> (d2, imgBaseY)
+        // imgBaseY = -groundY * M.
+        // groundY is pos (e.g. +40). So imgBaseY is neg (e.g. -50). -> Projecting "Up".
+        const imgBaseY = groundY * (-M); 
+        
+        // Draw Inverted Tree at Screen
+        // Base is at imgBaseY (Top, Negative Y). Tip is at imgTopY (Bottom, Positive Y).
+        // This means the "ground" of the image is on the ceiling!
+        this.drawAshokaTree(ctx, screenX, imgBaseY, imgH, true);
+        
+        // 6. Draw Explicit Rays with "Selection" Effect
+        // Faint Blocked Rays from Top
+        ctx.strokeStyle = 'rgba(211, 47, 47, 0.1)'; // Faint Red
+        ctx.lineWidth = 1;
+        for(let dy = -20; dy <= 20; dy+=5) {
+            ctx.beginPath(); ctx.moveTo(treeX, treeTopY); ctx.lineTo(0, dy); ctx.stroke();
+        }
+        
+        // THE RED RAY (Top -> Bottom)
+        ctx.strokeStyle = '#d32f2f'; // Red
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(treeX, treeTopY); ctx.lineTo(screenX, imgTopY); ctx.stroke();
+        // Arrowhead on ray
+        this.drawRayArrow(ctx, treeX*0.5, treeTopY + (0-treeTopY)*0.5, Math.atan2(-treeTopY, -treeX));
+
+        // THE BLUE RAY (Bottom -> Top)
+        ctx.strokeStyle = '#1976d2'; // Blue
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(treeX, groundY); ctx.lineTo(screenX, imgBaseY); ctx.stroke();
+        // Arrowhead on ray
+        this.drawRayArrow(ctx, treeX*0.5, groundY + (0-groundY)*0.5, Math.atan2(-groundY, -treeX));
+        
+        ctx.restore();
+        
+        // --- RIGHT SIDE: SCREEN VIEW ---
+        // Separator
+        ctx.strokeStyle = '#ccc';
+        ctx.beginPath(); ctx.moveTo(split, 0); ctx.lineTo(split, h); ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(split + (w-split)/2, h/2);
+        
+        // Draw "View inside the box" (Circular view)
+        ctx.fillStyle = '#212121';
+        ctx.beginPath(); ctx.arc(0,0, 100, 0, Math.PI*2); ctx.fill();
+        
+        // Draw Inverted Tree Centered
+        // The tree spans from imgBaseY (top/neg) to imgTopY (bottom/pos).
+        // We want to center this span on the view (0,0).
+        const centerOffset = (imgBaseY + imgTopY) / 2;
+        ctx.translate(0, -centerOffset);
+        
+        this.drawAshokaTree(ctx, 0, imgBaseY, imgH, true);
+        
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff';
+        ctx.font = "14px sans-serif";
+        ctx.fillText("View on Wall", -40, 120);
+        ctx.font = "12px monospace";
+        ctx.fillStyle = '#bbb';
+        ctx.fillText(`Scale: ${M.toFixed(1)}x`, -30, 140);
+        
+        ctx.restore();
+    }
+    
+    drawRayArrow(ctx, x, y, angle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(-5, -3); ctx.lineTo(0,0); ctx.lineTo(-5, 3);
+        ctx.stroke();
+        ctx.restore();
+    }
+    
+    drawAshokaTree(ctx, x, yBase, h, inverted) {
+        // Ashoka tree: Tall, narrow, conical.
+        // yBase: The Y coordinate where the trunk starts.
+        // h: The height of the tree.
+        // inverted: If true, the tree grows visually DOWN from yBase to yTip.
+        //           If false, the tree grows visually UP from yBase to yTip.
+        // Note: In Canvas, +Y is Down. 
+        // So Up means yTip < yBase. Down means yTip > yBase.
+        
+        const yTip = inverted ? yBase + h : yBase - h;
+        const width = h * 0.25; 
+        
+        ctx.save();
+        
+        // Trunk
+        ctx.strokeStyle = '#5d4037';
+        ctx.lineWidth = h * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(x, yBase);
+        ctx.lineTo(x, inverted ? yBase + h*0.15 : yBase - h*0.15);
+        ctx.stroke();
+        
+        // Foliage (Deep Green)
+        ctx.fillStyle = inverted ? 'rgba(129, 199, 132, 0.9)' : '#2e7d32'; 
+        ctx.beginPath();
+        ctx.moveTo(x, yTip); // Tip
+        
+        // Draw undulating sides
+        ctx.bezierCurveTo(
+            x - width, (yBase+yTip)/2, 
+            x - width/2, yBase, 
+            x, yBase - (inverted?-h*0.1:h*0.1) // Trunk junction
+        );
+        ctx.bezierCurveTo(
+            x + width/2, yBase,
+            x + width, (yBase+yTip)/2,
+            x, yTip
+        );
+        
+        ctx.fill();
+        ctx.restore();
     }
 }
 
@@ -860,7 +1091,7 @@ class EyeSystem extends OpticsSystem {
 }
 
 /**
- * TELESCOPE SYSTEM (New Story)
+ * TELESCOPE SYSTEM
  */
 class TelescopeSystem {
     constructor(canvasId) {
@@ -874,7 +1105,7 @@ class TelescopeSystem {
         this.width = this.canvas.getBoundingClientRect().width;
         this.height = this.canvas.getBoundingClientRect().height;
         this.oy = this.height / 2;
-        this.ox = 50; // Start rays from left
+        this.ox = 50; 
         
         this.attachResizeListener();
     }
@@ -902,19 +1133,18 @@ class TelescopeSystem {
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.stroke();
         
-        // 1. OBJECTIVE LENS (at fixed position)
+        // 1. OBJECTIVE LENS
         const lens1_x = 100;
         this.drawLens(ctx, lens1_x, 100, '#1565c0');
         ctx.fillStyle = '#1565c0'; ctx.fillText("Objective", lens1_x - 20, -110);
         
-        // 2. EYEPIECE LENS (at distance fo + fe)
+        // 2. EYEPIECE LENS
         const lens2_x = lens1_x + this.fo + this.fe;
         this.drawLens(ctx, lens2_x, 60, '#2e7d32');
         ctx.fillStyle = '#2e7d32'; ctx.fillText("Eyepiece", lens2_x - 20, -70);
         
         // RAYS
-        // Incoming parallel rays at angle alpha
-        const alpha = 0.05; // radians (small angle)
+        const alpha = 0.05; 
         const rayY = 40;
         
         ctx.strokeStyle = '#ff6f00';
@@ -922,42 +1152,25 @@ class TelescopeSystem {
         
         // Top Ray
         ctx.beginPath();
-        ctx.moveTo(0, rayY); // Far away
-        ctx.lineTo(lens1_x, rayY); // Hits Objective
-        // Focuses at fo
+        ctx.moveTo(0, rayY); 
+        ctx.lineTo(lens1_x, rayY); 
         const focusX = lens1_x + this.fo;
-        // Height at focus: h = fo * tan(alpha) ~ fo * alpha? 
-        // No, simple parallel ray logic: Parallel to axis goes to focus.
-        // Rays coming at angle alpha focus at height h = fo * alpha on focal plane.
-        
         const imageH = this.fo * Math.tan(alpha); 
-        ctx.lineTo(focusX, imageH); // Hits focal plane
-        
-        // Through Eyepiece
-        // It passes through eyepiece. From focal plane to eyepiece is fe.
-        // Ray from height h at focus, distance fe from eyepiece.
-        // It emerges parallel at angle beta. beta ~ h / fe = (fo*alpha)/fe.
-        // So beta/alpha = fo/fe = M.
-        
-        ctx.lineTo(lens2_x, (lens2_x - focusX) * (imageH/(focusX-lens1_x)) + imageH ); // Simple extrapolation
-        // Wait, geometry: Ray hits eyepiece at height H_eye.
-        // tan(beta) = imageH / fe.
-        const H_eye = imageH * (this.fe / 0.01); // Just drawing logic
-        // Let's just draw ray emerging parallel
+        ctx.lineTo(focusX, imageH); 
         
         const beta = Math.atan(imageH / this.fe);
-        ctx.lineTo(w, imageH - (w - focusX)*Math.tan(beta)); // Approximate exit
+        ctx.lineTo(w, imageH - (w - focusX)*Math.tan(beta)); 
         ctx.stroke();
         
-        // Bottom Ray (Symmetric)
+        // Bottom Ray
         ctx.beginPath();
         ctx.moveTo(0, -rayY);
         ctx.lineTo(lens1_x, -rayY);
-        ctx.lineTo(focusX, imageH); // Converge to same point on focal plane (since they are parallel from infinity at angle alpha)
+        ctx.lineTo(focusX, imageH); 
         ctx.lineTo(w, imageH - (w - focusX)*Math.tan(beta));
         ctx.stroke();
         
-        // Draw Intermediate Image arrow
+        // Intermediate Image
         this.drawArrow(ctx, focusX, imageH, '#c62828');
         
         ctx.restore();
@@ -991,7 +1204,7 @@ class TelescopeSystem {
 // --- INITIALIZATION ---
 const graph = new GraphSystem();
 
-// Pinhole
+// Pinhole (Abstract)
 const pinholeLab = new OpticsSystem('pinhole-canvas', 'pinhole');
 const p_u = document.getElementById('p-u-input');
 const p_v = document.getElementById('p-v-input');
@@ -1008,6 +1221,23 @@ function updatePinhole() {
 p_u.addEventListener('input', updatePinhole);
 p_v.addEventListener('input', updatePinhole);
 updatePinhole();
+
+// Camera Obscura (Ashoka Tree)
+const obscuraLab = new CameraObscuraSystem('obscura-canvas');
+const o_d1 = document.getElementById('o-d1-input');
+const o_d2 = document.getElementById('o-d2-input');
+function updateObscura() {
+    obscuraLab.d1 = parseFloat(o_d1.value);
+    obscuraLab.d2 = parseFloat(o_d2.value);
+    obscuraLab.draw();
+    document.getElementById('o-d1-val').textContent = obscuraLab.d1;
+    document.getElementById('o-d2-val').textContent = obscuraLab.d2;
+    const m = obscuraLab.d2 / obscuraLab.d1;
+    document.getElementById('o-calc-res').innerHTML = `Scale: ${m.toFixed(2)}x`;
+}
+o_d1.addEventListener('input', updateObscura);
+o_d2.addEventListener('input', updateObscura);
+updateObscura();
 
 // Mirror
 const mirrorLab = new OpticsSystem('mirror-canvas', 'mirror');
