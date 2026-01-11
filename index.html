@@ -48,7 +48,6 @@
             margin: 0;
             padding: 0;
             line-height: 1.8;
-            /* Removed grid pattern for smoother mobile scroll */
             overflow-x: hidden; 
             width: 100%;
         }
@@ -86,9 +85,9 @@
         .toc-sidebar a { text-decoration: none; color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; display: block; padding: 5px 0; }
         .toc-sidebar a:hover { color: var(--accent); }
 
-        /* --- Typography (MATCHING INDEX FILE) --- */
+        /* --- Typography --- */
         h1, h2, h3, h4 { 
-            font-family: 'Segoe UI', 'Roboto', sans-serif; /* Switched to Sans-Serif for cleaner mobile look */
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
             color: var(--primary); 
             margin-top: 1.5em; 
             font-weight: 700; 
@@ -140,7 +139,7 @@
         canvas {
             display: block; width: 100%; height: 400px; cursor: crosshair;
             background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f5f5f5 100%);
-            touch-action: none; /* Prevents scroll when touching canvas */
+            touch-action: none;
         }
 
         #pinhole-canvas { background: linear-gradient(90deg, #f5f5f5 50%, #263238 50%); }
@@ -166,7 +165,6 @@
             text-transform: uppercase; letter-spacing: 0.5px;
         }
         
-        /* Custom Range Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-thumb {
@@ -203,23 +201,17 @@
 
         /* --- MOBILE OPTIMIZATION --- */
         @media (max-width: 768px) {
-            body { background-size: auto; /* disable grid pattern effect */ }
+            body { background-size: auto; }
             .hero { padding: 60px 20px; }
             .hero h1 { font-size: 2.2rem; }
-            
             .container { padding: 15px; }
-            section { padding: 20px; margin-bottom: 25px; } /* Less padding for more content */
-            
+            section { padding: 20px; margin-bottom: 25px; } 
             h2 { font-size: 1.5rem; }
             p.narrative { font-size: 1rem; }
-            
-            /* Canvas height adjustment for mobile */
             canvas { height: 300px !important; }
-            
             .controls-bar { padding: 15px; gap: 15px; }
             .stats-panel { grid-template-columns: 1fr; gap: 5px; text-align: left !important; }
             .stats-panel div { text-align: left !important; }
-            
             .toc-sidebar { width: 85%; }
         }
     </style>
@@ -457,32 +449,121 @@
                 <div id="l-calc-props" style="text-align: right;"></div>
             </div>
         </div>
-        
-        <div class="advanced-read">
-            <h3>The Mechanics of Capture</h3>
+        <div class="textbook-section" style="border-left-color: #7b1fa2; background: #fafafa;">
+            <h3>Mathematical Derivation: Depth of Field</h3>
+            
             <p>
-                The camera is a box with a lens in one side of it and a photographic film or a CCD on the opposite side. The distance between camera lens and film can be changed so as to focus on objects at various distances. The <strong>aperture</strong> can also be changed.
+                Depth of focus is not the same thing as depth of field. Suppose we want to photograph an object at a distance $p$ from the camera lens, and that we are prepared to tolerate an out-of-focus “image” of diameter up to $d$, or radius $r$. Any object at a distance within the range $p \pm \Delta p$ may satisfy this, and we now want to find $\Delta p$.
             </p>
+
+            <h4>Figure III.4: The Geometry of Blur</h4>
             <p>
-                In dim light you need to open the aperture up to let a lot of light in; but this makes the image less sharp, and you have a smaller depth of field. The aperture of a lens is merely its diameter, and it is usually expressed as a fraction of the focal length. Thus an aperture of $f/22$ is a small aperture. You can use this only in strong light, but you will then have nice sharp images and a large depth of field. An aperture of $f/6.3$ is wide open; the cone of light inside the camera is quite steep, and focussing is then quite critical.
+                First, let us look at the geometry of a simple focused beam. If light from a distant object converges to a focus at distance $f$, and we place our detector at a distance $x$ away from the focal plane, the light will spread out into a circle of radius $r$.
             </p>
             
-            <h3>Depth of Focus: A Triangle Problem</h3>
+            <div style="text-align: center; margin: 30px 0;">
+                <svg width="100%" height="180" viewBox="0 0 600 180" style="background:#fff; border:1px solid #eee; border-radius:4px;">
+                    <defs>
+                        <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L6,3 z" fill="#555" /></marker>
+                    </defs>
+                    <line x1="50" y1="90" x2="550" y2="90" stroke="#b0bec5" stroke-dasharray="4" />
+                    <ellipse cx="100" cy="90" rx="8" ry="70" fill="rgba(33, 150, 243, 0.1)" stroke="#1565c0" stroke-width="2"/>
+                    <text x="85" y="40" font-family="serif" font-style="italic" fill="#1565c0">R</text>
+                    <line x1="100" y1="90" x2="100" y2="20" stroke="#1565c0" stroke-width="1"/>
+                    
+                    <path d="M50,20 L100,20 L400,90" fill="none" stroke="#37474f" stroke-width="1.5" />
+                    <path d="M50,160 L100,160 L400,90" fill="none" stroke="#37474f" stroke-width="1.5" />
+                    
+                    <line x1="400" y1="90" x2="550" y2="55" stroke="#37474f" stroke-width="1" />
+                    <line x1="400" y1="90" x2="550" y2="125" stroke="#37474f" stroke-width="1" />
+
+                    <line x1="400" y1="50" x2="400" y2="130" stroke="#aaa" stroke-dasharray="2,2"/>
+                    <text x="395" y="145" font-family="serif" font-style="italic">f</text>
+
+                    <line x1="320" y1="71" x2="320" y2="109" stroke="#d32f2f" stroke-width="2"/>
+                    <text x="310" y="65" font-family="serif" font-style="italic" fill="#d32f2f">r</text>
+                    
+                    <path d="M100,100 L400,100" stroke="#555" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                    <text x="240" y="115" font-family="serif" font-style="italic">f</text>
+
+                    <path d="M320,80 L400,80" stroke="#d32f2f" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                    <text x="355" y="75" font-family="serif" font-style="italic" fill="#d32f2f">x</text>
+                </svg>
+                <div style="font-size: 0.8rem; color: #546e7a; margin-top:5px;">
+                    FIGURE III.4: Geometry of the blur circle
+                </div>
+            </div>
+
+            <p>From similar triangles we see that:</p>
+            $$ \frac{x}{r} = \frac{q}{R} \quad \text{(or } \frac{f}{R} \text{ for infinite object)} $$
+
+            <h4>Figure III.5: Depth of Field Derivation</h4>
             <p>
-                How is the depth of focus related to the aperture? Imagine a cone of light converging from a lens of radius $R$ to a focal point at distance $q$. Let us suppose that we place a film or CCD at a distance $x$ from the focal point, and that we are prepared to tolerate an out-of-focus “image” of radius $r$. From similar triangles we see that $x/r = q/R$.
+                Figure III.5 shows, with full lines, light from an object at distance $p$ coming to a focus at a distance $q$, and with dashed lines, light from an object at a distance $\Delta p$ closer to the lens coming to a focus at a distance $\Delta q$ further from the lens. The position of the film is indicated by the dotted line, and the radius of the out-of-focus dashed “image” is $r$.
             </p>
-            <p>
-                Thus we can place the film at a distance:
-                $$ x = q \frac{d}{D} $$
-                on either side of the true focal plane without appreciable degradation of the image. For example, if the aperture is $f/6.3$ and you tolerate $d = 0.1 \text{ mm}$, the depth of focus will be $\pm 0.63 \text{ mm}$.
-            </p>
-            
-            <h3>Depth of Field vs Depth of Focus</h3>
-            <p>
-                Depth of focus is not the same thing as depth of field. We have essentially two sets of similar triangles to compare: one outside the camera (object space) and one inside (image space). Since $m = v/u$ (or $q/p$), a small shift in the image plane corresponds to a much larger shift in the object plane ($\Delta p \approx \Delta q / m^2$), meaning Depth of Field is typically much larger than Depth of Focus.
-            </p>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <svg width="100%" height="200" viewBox="0 0 600 200" style="background:#fff; border:1px solid #eee; border-radius:4px;">
+                    <defs>
+                        <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L6,3 z" fill="#555" /></marker>
+                    </defs>
+                    
+                    <path d="M50,100 L200,30" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+                    <path d="M50,100 L200,170" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+                    <text x="40" y="115" font-family="serif" font-size="10" fill="#999">Δp</text>
+                    
+                    <path d="M0,100 L200,30" stroke="#37474f" stroke-width="1.5" />
+                    <path d="M0,100 L200,170" stroke="#37474f" stroke-width="1.5" />
+
+                    <ellipse cx="200" cy="100" rx="8" ry="70" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+                    <line x1="200" y1="100" x2="200" y2="30" stroke="#1565c0"/>
+                    <text x="185" y="60" font-family="serif" font-style="italic" fill="#1565c0">R</text>
+
+                    <path d="M200,30 L450,100" stroke="#37474f" stroke-width="1.5" />
+                    <path d="M200,170 L450,100" stroke="#37474f" stroke-width="1.5" />
+                    
+                    <path d="M200,30 L550,100" stroke="#999" stroke-width="1.5" stroke-dasharray="5,3"/>
+                    <path d="M200,170 L550,100" stroke="#999" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+                    <line x1="450" y1="20" x2="450" y2="180" stroke="#000" stroke-width="1.5" stroke-dasharray="2,2"/>
+                    <text x="440" y="190" font-size="12" fill="#333">Film Plane (q)</text>
+
+                    <line x1="450" y1="100" x2="450" y2="80" stroke="#d32f2f" stroke-width="3"/>
+                    <text x="455" y="90" font-family="serif" font-style="italic" fill="#d32f2f" font-weight="bold">r</text>
+
+                    <line x1="450" y1="110" x2="550" y2="110" stroke="#555" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+                    <text x="490" y="125" font-family="serif" font-style="italic">Δq</text>
+                </svg>
+                <div style="font-size: 0.8rem; color: #546e7a; margin-top:5px;">
+                    FIGURE III.5
+                </div>
+            </div>
+
+            <p>We have:</p>
+            $$ \frac{1}{q} - \frac{1}{p} = -\frac{1}{p} + \frac{1}{f'} $$
+            <p>So that</p>
+            $$ q = \frac{pf}{p-f} $$
+            <p>and, without regard to sign,</p>
+            $$ \Delta q = -\left(\frac{f}{p-f}\right)^2 \Delta p. $$
+            <p>From similar triangles we see that</p>
+            $$ \frac{R}{q + \Delta q} = \frac{r}{\Delta q}. $$
+            <p>Elimination of $q$ and $\Delta q$ results in</p>
+            $$ \Delta p = \frac{pr(p-f)}{f(R-r)}, $$
+            <p>or, in terms of diameters rather than radii,</p>
+            $$ \Delta p = \frac{pd(p-f)}{f(D-d)}. $$
+
+            <div class="highlight-box" style="background-color: #fff8e1; border-left-color: #ff8f00;">
+                <strong>Numerical Example:</strong><br>
+                Suppose the focal length is $f = 25 \text{ cm}$ and you want to photograph an object at a distance of $p = 400 \text{ cm}$. You are prepared to regard an out-of-focus “image” tolerable if its diameter is no larger than $d = 0.1 \text{ mm}$.
+                <ul>
+                    <li>If the aperture is <strong>$D = f/6.3$</strong> ($D \approx 4 \text{ cm}$), you can photograph objects in the range <strong>$(400 \pm 15) \text{ cm}$</strong>.</li>
+                    <li>If you “stop down” to <strong>$D = f/22$</strong> ($D \approx 1.1 \text{ cm}$), you can photograph objects in the range <strong>$(400 \pm 53) \text{ cm}$</strong>.</li>
+                </ul>
+            </div>
+
+            <p>To the approximation that $d \ll D$ and $f \ll p$, Equation becomes</p>
+            $$ \Delta p \approx \frac{p^2 d}{f D}. $$
         </div>
-        
         <h3 id="sec-focus">5.1 The Physics of Photography: Cameras</h3>
         <div class="textbook-section">
             <p>
